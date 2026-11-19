@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS visitas (
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_visitas_regularizada_por
         FOREIGN KEY (regularizada_por_usuario_id) REFERENCES usuarios (id)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+        ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS incidentes (
@@ -207,10 +207,10 @@ CREATE TABLE IF NOT EXISTS incidentes (
         CHECK (visita_id IS NOT NULL OR persona_id IS NOT NULL),
     CONSTRAINT fk_incidentes_visita
         FOREIGN KEY (visita_id) REFERENCES visitas (id)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
     CONSTRAINT fk_incidentes_persona
         FOREIGN KEY (persona_id) REFERENCES personas (id)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
     CONSTRAINT fk_incidentes_reportado_por
         FOREIGN KEY (reportado_por_usuario_id) REFERENCES usuarios (id)
         ON UPDATE CASCADE ON DELETE RESTRICT

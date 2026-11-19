@@ -68,8 +68,8 @@ No use `docker compose down -v` si desea conservar la base de datos.
 Los scripts no eliminan tablas ni datos. Para crear objetos faltantes y actualizar los catalogos iniciales de manera controlada:
 
 ```powershell
-docker compose exec mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/01-schema.sql'
-docker compose exec mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/02-data.sql'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/01-schema.sql'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/02-data.sql'
 ```
 
 Los detalles del modelo y sus decisiones estan en `database/decisiones-bd.md`.

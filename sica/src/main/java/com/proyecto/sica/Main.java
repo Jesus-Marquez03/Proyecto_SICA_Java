@@ -1,5 +1,6 @@
 package com.proyecto.sica;
 
+import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
 import com.proyecto.sica.config.ConfiguracionBaseDatos;
 import com.proyecto.sica.infrastructure.database.ComprobadorConexion;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
@@ -33,6 +34,9 @@ public final class Main {
         } catch (IllegalStateException | SQLException excepcion) {
             System.err.println("No fue posible conectar con MySQL: " + excepcion.getMessage());
             System.exit(1);
+        } finally {
+            // Detiene el hilo auxiliar del driver al finalizar esta utilidad de consola.
+            AbandonedConnectionCleanupThread.checkedShutdown();
         }
     }
 }

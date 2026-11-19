@@ -30,6 +30,6 @@ No se insertan usuarios de demostracion. Cuando se implemente autenticacion, las
 
 ## Integridad e indices
 
-Las claves foraneas usan `RESTRICT` en registros historicos para evitar eliminaciones accidentales y `SET NULL` donde la relacion es opcional. Las restricciones `CHECK` validan tipos, estados y coherencia basica de fechas. Se agregaron indices para las busquedas habituales de usuarios, personas, solicitudes pendientes, incidentes y auditoria.
+Las claves foraneas usan `RESTRICT` en registros historicos para evitar eliminaciones accidentales y `SET NULL` donde la relacion es opcional. Las relaciones incluidas en un `CHECK` tambien restringen cambios de identificador porque MySQL 8.4 no permite combinar esas columnas con `ON UPDATE CASCADE`. Las restricciones `CHECK` validan tipos, estados y coherencia basica de fechas. Se agregaron indices para las busquedas habituales de usuarios, personas, solicitudes pendientes, incidentes y auditoria.
 
 Los scripts no eliminan bases ni tablas. `schema.sql` crea los objetos faltantes y `data.sql` puede ejecutarse nuevamente sin duplicar los catalogos iniciales. Para reconstruir completamente el entorno debe usarse una base vacia de forma deliberada.
