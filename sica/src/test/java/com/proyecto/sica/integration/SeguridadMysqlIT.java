@@ -33,7 +33,7 @@ class SeguridadMysqlIT {
         Usuario superusuario = autenticacion.iniciarSesion(
                 "superusuario@sica.example", "SicaSuper2026!".toCharArray());
         assertDoesNotThrow(() -> autorizacion.verificarPermiso(
-                superusuario, PermisosSistema.GESTIONAR_USUARIOS));
+                superusuario, PermisosSistema.CREAR_USUARIO));
         autenticacion.cerrarSesion();
 
         assertThrows(AutenticacionException.class, () -> autenticacion.iniciarSesion(
@@ -41,7 +41,7 @@ class SeguridadMysqlIT {
         Usuario guarda = autenticacion.iniciarSesion(
                 "guarda@sica.example", "SicaGuarda2026!".toCharArray());
         assertThrows(AccesoDenegadoException.class, () -> autorizacion.verificarPermiso(
-                guarda, PermisosSistema.GESTIONAR_USUARIOS));
+                guarda, PermisosSistema.CREAR_USUARIO));
         autenticacion.cerrarSesion();
 
         assertTrue(contarEventosLogin() >= 3);
