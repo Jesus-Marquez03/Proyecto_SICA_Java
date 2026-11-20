@@ -2,6 +2,7 @@ package com.proyecto.sica;
 
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
 import com.proyecto.sica.config.ConfiguracionBaseDatos;
+import com.proyecto.sica.config.ConfiguracionAplicacion;
 import com.proyecto.sica.infrastructure.database.ComprobadorConexion;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import java.sql.SQLException;
@@ -20,9 +21,14 @@ public final class Main {
             verificarConexion();
             return;
         }
+        if (args.length == 1 && "--inicializar-demo".equals(args[0])) {
+            inicializarUsuariosDemo();
+            return;
+        }
 
-        System.out.println("SICA - configuracion inicial");
+        System.out.println("SICA - usuarios y seguridad");
         System.out.println("Use --verificar-conexion para comprobar MySQL.");
+        System.out.println("Use --inicializar-demo para crear los usuarios academicos.");
     }
 
     private static void verificarConexion() {
@@ -36,6 +42,19 @@ public final class Main {
             System.exit(1);
         } finally {
             // Detiene el hilo auxiliar del driver al finalizar esta utilidad de consola.
+            AbandonedConnectionCleanupThread.checkedShutdown();
+        }
+    }
+
+    private static void inicializarUsuariosDemo() {
+        try {
+            ConfiguracionAplicacion configuracion = new ConfiguracionAplicacion();
+            configuracion.getInicializadorUsuariosDemo().ejecutar()
+                    .forEach(System.out::println);
+        } catch (RuntimeException excepcion) {
+            System.err.println("No fue posible inicializar usuarios demo: " + excepcion.getMessage());
+            System.exit(1);
+        } finally {
             AbandonedConnectionCleanupThread.checkedShutdown();
         }
     }
