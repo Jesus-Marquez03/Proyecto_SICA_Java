@@ -34,7 +34,7 @@ class CrearUsuarioUseCaseTest {
         usuarios = new UsuariosMemoria(auditoria);
         roles = new RolesMemoria();
         empresas = new EmpresasMemoria();
-        Rol administrador = rolConPermiso("GESTIONAR_USUARIOS");
+        Rol administrador = rolConPermiso("CREAR_USUARIO");
         Rol funcionario = new Rol(4, "Funcionario de Empresa", "Prueba",
                 true, true, Set.of());
         roles.agregar(administrador);
@@ -79,7 +79,7 @@ class CrearUsuarioUseCaseTest {
 
     @Test
     void rechazaCorreoDuplicado() {
-        usuarios.agregar(usuario(5, rolConPermiso("GESTIONAR_USUARIOS"),
+        usuarios.agregar(usuario(5, rolConPermiso("CREAR_USUARIO"),
                 "repetido@sica.example", "hash", true));
         SolicitudCrearUsuario solicitud = new SolicitudCrearUsuario(
                 "persona", "ClaveSegura2026!".toCharArray(), "Ana", "Prueba",
