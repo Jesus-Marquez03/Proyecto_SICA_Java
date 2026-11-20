@@ -35,3 +35,15 @@ Las contrasenas se almacenan con PBKDF2-HMAC-SHA256, 600 000 iteraciones, sal al
 Las claves foraneas usan `RESTRICT` en registros historicos para evitar eliminaciones accidentales y `SET NULL` donde la relacion es opcional. Las relaciones incluidas en un `CHECK` tambien restringen cambios de identificador porque MySQL 8.4 no permite combinar esas columnas con `ON UPDATE CASCADE`. Las restricciones `CHECK` validan tipos, estados y coherencia basica de fechas. Se agregaron indices para las busquedas habituales de usuarios, personas, solicitudes pendientes, incidentes y auditoria.
 
 Los scripts no eliminan bases ni tablas. `schema.sql` crea los objetos faltantes y `data.sql` puede ejecutarse nuevamente sin duplicar los catalogos iniciales. Para reconstruir completamente el entorno debe usarse una base vacia de forma deliberada.
+
+## Tercera etapa: personas y empresas
+
+La tabla `empresas` ya tenia `activa`, por lo que no se agrego otra columna de estado. Su correo sigue siendo opcional: el contacto principal puede registrarse mediante los campos existentes `telefono` y `correo`. El NIT permanece como clave unica y el nombre duplicado se evita desde el caso de uso.
+
+La tabla `personas` ya podia representar trabajadores e invitados mediante `tipo_persona`; no se dividio en dos tablas. Se agrego solamente `foto_url VARCHAR(500)`, opcional, porque una URL no requiere almacenar imagenes en MySQL. Un trabajador exige una empresa activa desde la aplicacion. La empresa de un invitado es opcional y sirve como contexto para el futuro flujo de visitas; el funcionario anfitrion se relacionara en `visitas.anfitrion_usuario_id`, no se duplica en `personas`.
+
+Se conservaron `FUERA`, `DENTRO`, `SALIDA_PENDIENTE` y `BLOQUEADO` porque describen situaciones fisicas de acceso. Se agregaron `ACTIVO` y `PROHIBICION_INGRESO` como estados administrativos solicitados para esta etapa. Cambiar el estado nunca elimina la persona ni sus visitas.
+
+La migracion `003_personas_empresas.sql` tambien corrige una diferencia encontrada entre el esquema reconstruible y la base migrada: `usuarios.correo` debe ser obligatorio y `empresas.correo` opcional. Inserta los permisos granulares, sus relaciones por codigo y tres personas ficticias mediante operaciones repetibles que no sobrescriben datos locales.
+
+Los permisos antiguos se mantienen para no romper etapas previas. Los casos de uso de usuarios migraron a cuatro permisos especificos, y empresas/personas usan siete permisos adicionales. La autorizacion no depende de comparar nombres de roles en Java.

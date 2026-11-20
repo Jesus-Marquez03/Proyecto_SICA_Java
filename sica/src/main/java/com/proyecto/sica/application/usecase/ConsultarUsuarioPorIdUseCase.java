@@ -21,7 +21,7 @@ public final class ConsultarUsuarioPorIdUseCase {
     }
 
     public Usuario ejecutar(Usuario actor, long id) {
-        autorizacion.verificarPermiso(actor, PermisosSistema.GESTIONAR_USUARIOS);
+        autorizacion.verificarPermiso(actor, PermisosSistema.CONSULTAR_USUARIO);
         return usuarioRepository.buscarPorId(id)
                 .orElseThrow(() -> new ValidacionException("El usuario no existe"));
     }

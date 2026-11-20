@@ -31,7 +31,7 @@ public final class CrearUsuarioUseCase {
     }
 
     public Usuario ejecutar(Usuario actor, SolicitudCrearUsuario solicitud) {
-        autorizacion.verificarPermiso(actor, PermisosSistema.GESTIONAR_USUARIOS);
+        autorizacion.verificarPermiso(actor, PermisosSistema.CREAR_USUARIO);
         char[] password = solicitud.copiarPassword();
         try {
             if (password == null || password.length == 0) {

@@ -1,6 +1,7 @@
 package com.proyecto.sica.infrastructure.ui;
 
 import com.proyecto.sica.domain.entity.Usuario;
+import com.proyecto.sica.application.service.PermisosSistema;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -11,17 +12,21 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /**
- * Pantalla provisional reutilizable como base del futuro dashboard.
+ * Contenedor principal con navegacion lateral para los modulos disponibles.
  */
 public final class DashboardView {
 
     private final BorderPane root = new BorderPane();
 
-    public DashboardView(Usuario usuario, Runnable alCerrarSesion) {
-        construir(usuario, alCerrarSesion);
+    public DashboardView(Usuario usuario, Runnable alCerrarSesion,
+            Runnable alAbrirEmpresas, Runnable alAbrirPersonas,
+            Runnable alAbrirEstados) {
+        construir(usuario, alCerrarSesion, alAbrirEmpresas, alAbrirPersonas, alAbrirEstados);
     }
 
-    private void construir(Usuario usuario, Runnable alCerrarSesion) {
+    private void construir(Usuario usuario, Runnable alCerrarSesion,
+            Runnable alAbrirEmpresas, Runnable alAbrirPersonas,
+            Runnable alAbrirEstados) {
         root.getStyleClass().add("dashboard-root");
         Label marca = new Label("SICA");
         marca.getStyleClass().add("marca-dashboard");
@@ -44,7 +49,7 @@ public final class DashboardView {
                 ? "Empresa: Administracion general"
                 : "Empresa: " + usuario.getEmpresaNombre());
         empresa.getStyleClass().add("dato-dashboard");
-        Label mensaje = new Label("El modulo de seguridad esta listo. Los paneles operativos se agregaran en las siguientes etapas.");
+        Label mensaje = new Label("Selecciona un modulo en el menu lateral para comenzar.");
         mensaje.setWrapText(true);
         mensaje.getStyleClass().add("texto-secundario");
 
@@ -56,8 +61,34 @@ public final class DashboardView {
         VBox centro = new VBox(contenido);
         centro.setAlignment(Pos.CENTER);
         centro.setPadding(new Insets(40));
+
+        Button empresasButton = botonMenu("Empresas", alAbrirEmpresas);
+        Button personasButton = botonMenu("Personas", alAbrirPersonas);
+        Button estadosButton = botonMenu("Estados de acceso", alAbrirEstados);
+        empresasButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_EMPRESA));
+        personasButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_PERSONA));
+        estadosButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_PERSONA));
+        VBox menu = new VBox(8, new Label("MODULOS"), empresasButton,
+                personasButton, estadosButton);
+        menu.getStyleClass().add("menu-lateral");
+        menu.setPadding(new Insets(24, 14, 24, 14));
+        menu.setPrefWidth(190);
+
         root.setTop(encabezado);
+        root.setLeft(menu);
         root.setCenter(centro);
+    }
+
+    private Button botonMenu(String texto, Runnable accion) {
+        Button boton = new Button(texto);
+        boton.getStyleClass().add("boton-menu");
+        boton.setMaxWidth(Double.MAX_VALUE);
+        boton.setOnAction(evento -> accion.run());
+        return boton;
+    }
+
+    public void mostrarContenido(Parent contenido) {
+        root.setCenter(contenido);
     }
 
     public Parent getRoot() {

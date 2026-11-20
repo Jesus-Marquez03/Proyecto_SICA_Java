@@ -26,7 +26,7 @@ public final class ActualizarUsuarioUseCase {
     }
 
     public Usuario ejecutar(Usuario actor, SolicitudActualizarUsuario solicitud) {
-        autorizacion.verificarPermiso(actor, PermisosSistema.GESTIONAR_USUARIOS);
+        autorizacion.verificarPermiso(actor, PermisosSistema.ACTUALIZAR_USUARIO);
         Usuario actual = usuarioRepository.buscarPorId(solicitud.getId())
                 .orElseThrow(() -> new ValidacionException("El usuario no existe"));
         validador.validarTextos(solicitud.getNombreUsuario(), solicitud.getNombres(),
