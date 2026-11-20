@@ -21,7 +21,7 @@ public final class ConsultarUsuariosUseCase {
     }
 
     public List<Usuario> ejecutar(Usuario actor) {
-        autorizacion.verificarPermiso(actor, PermisosSistema.GESTIONAR_USUARIOS);
+        autorizacion.verificarPermiso(actor, PermisosSistema.CONSULTAR_USUARIO);
         return usuarioRepository.listar();
     }
 }

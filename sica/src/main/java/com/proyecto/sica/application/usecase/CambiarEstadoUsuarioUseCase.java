@@ -22,7 +22,7 @@ public final class CambiarEstadoUsuarioUseCase {
     }
 
     public void ejecutar(Usuario actor, long usuarioId, boolean activo) {
-        autorizacion.verificarPermiso(actor, PermisosSistema.GESTIONAR_USUARIOS);
+        autorizacion.verificarPermiso(actor, PermisosSistema.CAMBIAR_ESTADO_USUARIO);
         usuarioRepository.buscarPorId(usuarioId)
                 .orElseThrow(() -> new ValidacionException("El usuario no existe"));
         String accion = activo ? "ACTIVAR_USUARIO" : "DESACTIVAR_USUARIO";
