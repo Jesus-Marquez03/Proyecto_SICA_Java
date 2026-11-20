@@ -53,4 +53,9 @@ public final class Empresa {
     public boolean isActiva() {
         return activa;
     }
+
+    @Override
+    public String toString() {
+        return nombre;
+    }
 }

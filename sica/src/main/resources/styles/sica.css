@@ -92,3 +92,73 @@
     -fx-font-size: 16px;
     -fx-text-fill: #333337;
 }
+
+.menu-lateral {
+    -fx-background-color: #222225;
+}
+
+.menu-lateral .label {
+    -fx-text-fill: #a9a9ad;
+    -fx-font-size: 11px;
+    -fx-padding: 0 8px 8px 8px;
+}
+
+.boton-menu {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f2f2f3;
+    -fx-alignment: center-left;
+    -fx-padding: 11px 12px;
+    -fx-background-radius: 7px;
+    -fx-cursor: hand;
+}
+
+.boton-menu:hover {
+    -fx-background-color: #3b3b3f;
+}
+
+.boton-menu:disabled {
+    -fx-opacity: 0.35;
+}
+
+.modulo-root {
+    -fx-background-color: #f3f4f6;
+}
+
+.barra-modulo {
+    -fx-alignment: center-left;
+    -fx-padding: 14px 18px;
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #e1e2e5 transparent;
+}
+
+.barra-modulo .text-field {
+    -fx-pref-width: 220px;
+}
+
+.tarjeta-modulo {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-border-color: #e1e2e5;
+    -fx-border-radius: 10px;
+}
+
+.tarjeta-modulo .text-field,
+.tarjeta-modulo .combo-box {
+    -fx-pref-width: 215px;
+}
+
+.boton-neutro {
+    -fx-background-color: white;
+    -fx-border-color: #bfc1c6;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-padding: 9px 14px;
+    -fx-cursor: hand;
+}
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #e1e2e5;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
