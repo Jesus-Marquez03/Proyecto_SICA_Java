@@ -1,15 +1,16 @@
 -- Datos iniciales idempotentes para SICA.
 USE sica_db;
 
-INSERT INTO roles (id, nombre, descripcion, activo) VALUES
-    (1, 'Superusuario', 'Administra la configuracion completa de SICA.', TRUE),
-    (2, 'Supervisor de Seguridad', 'Supervisa accesos, incidentes, auditoria y reportes.', TRUE),
-    (3, 'Guarda de Seguridad', 'Registra y controla ingresos, salidas e incidentes.', TRUE),
-    (4, 'Funcionario de Empresa', 'Solicita visitas y consulta sus solicitudes.', TRUE)
+INSERT INTO roles (id, nombre, descripcion, activo, requiere_empresa) VALUES
+    (1, 'Superusuario', 'Administra la configuracion completa de SICA.', TRUE, FALSE),
+    (2, 'Supervisor de Seguridad', 'Supervisa accesos, incidentes, auditoria y reportes.', TRUE, FALSE),
+    (3, 'Guarda de Seguridad', 'Registra y controla ingresos, salidas e incidentes.', TRUE, FALSE),
+    (4, 'Funcionario de Empresa', 'Solicita visitas y consulta sus solicitudes.', TRUE, TRUE)
 ON DUPLICATE KEY UPDATE
     nombre = VALUES(nombre),
     descripcion = VALUES(descripcion),
-    activo = VALUES(activo);
+    activo = VALUES(activo),
+    requiere_empresa = VALUES(requiere_empresa);
 
 INSERT INTO permisos (id, codigo, nombre, descripcion) VALUES
     (1, 'GESTIONAR_ROLES_PERMISOS', 'Gestionar roles y permisos', 'Configurar la autorizacion RBAC.'),

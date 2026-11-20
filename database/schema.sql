@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS roles (
     nombre VARCHAR(60) NOT NULL,
     descripcion VARCHAR(255),
     activo BOOLEAN NOT NULL DEFAULT TRUE,
+    requiere_empresa BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT uk_roles_nombre UNIQUE (nombre)
 ) ENGINE = InnoDB;
 
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS empresas (
     nombre VARCHAR(120) NOT NULL,
     direccion VARCHAR(180),
     telefono VARCHAR(30),
-    correo VARCHAR(120),
+    correo VARCHAR(120) NOT NULL,
     activa BOOLEAN NOT NULL DEFAULT TRUE,
     creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_empresas_nit UNIQUE (nit)
@@ -219,7 +220,7 @@ CREATE TABLE IF NOT EXISTS incidentes (
 CREATE TABLE IF NOT EXISTS bitacora_auditoria (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuario_id BIGINT UNSIGNED,
-    nombre_usuario_intentado VARCHAR(60),
+    nombre_usuario_intentado VARCHAR(120),
     accion VARCHAR(80) NOT NULL,
     entidad VARCHAR(60),
     entidad_id VARCHAR(60),
