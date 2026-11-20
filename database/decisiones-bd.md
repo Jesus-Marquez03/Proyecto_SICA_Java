@@ -24,9 +24,11 @@ Las solicitudes pendientes se obtienen consultando `visitas` por `estado_visita_
 
 ## Seguridad y auditoria
 
-`bitacora_auditoria.usuario_id` acepta `NULL` y `nombre_usuario_intentado` guarda el identificador digitado. Esto permite registrar un login fallido aunque no exista un usuario autenticado. Los indices priorizan consultas por fecha, usuario, accion y resultado.
+`bitacora_auditoria.usuario_id` acepta `NULL` y `nombre_usuario_intentado` guarda el correo digitado. Su longitud se amplio a 120 caracteres para coincidir con `usuarios.correo`. Esto permite registrar un login fallido aunque no exista un usuario autenticado. Los indices priorizan consultas por fecha, usuario, accion y resultado.
 
-No se insertan usuarios de demostracion. Cuando se implemente autenticacion, las contrasenas se almacenaran como hash con sal aleatoria mediante `PBKDF2WithHmacSHA256`, `SecretKeyFactory` y `SecureRandom`, disponibles en Java, nunca como texto plano.
+Las contrasenas se almacenan con PBKDF2-HMAC-SHA256, 600 000 iteraciones, sal aleatoria individual de 16 bytes y hash de 256 bits. Los usuarios demo se crean mediante una orden Java explicita; no hay contrasenas planas ni hashes fijos en SQL.
+
+`usuarios.correo` paso a ser obligatorio porque es el identificador de autenticacion. `roles.requiere_empresa` evita codificar en Java que el Funcionario de Empresa debe relacionarse con una empresa valida. La migracion `002_usuarios_seguridad.sql` aplica estos cambios a una base existente.
 
 ## Integridad e indices
 
