@@ -5,6 +5,7 @@ import com.proyecto.sica.config.ConfiguracionBaseDatos;
 import com.proyecto.sica.config.ConfiguracionAplicacion;
 import com.proyecto.sica.infrastructure.database.ComprobadorConexion;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
+import com.proyecto.sica.infrastructure.ui.SicaApplication;
 import java.sql.SQLException;
 
 /**
@@ -25,10 +26,15 @@ public final class Main {
             inicializarUsuariosDemo();
             return;
         }
+        if (args.length == 0 || (args.length == 1 && "--javafx".equals(args[0]))) {
+            SicaApplication.iniciar(args);
+            return;
+        }
 
         System.out.println("SICA - usuarios y seguridad");
         System.out.println("Use --verificar-conexion para comprobar MySQL.");
         System.out.println("Use --inicializar-demo para crear los usuarios academicos.");
+        System.out.println("Use --javafx o ningun argumento para abrir la interfaz.");
     }
 
     private static void verificarConexion() {
