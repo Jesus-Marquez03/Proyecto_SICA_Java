@@ -12,6 +12,7 @@ import com.proyecto.sica.application.service.ValidadorEmpresa;
 import com.proyecto.sica.application.service.ValidadorPersona;
 import com.proyecto.sica.application.service.ValidadorUsuario;
 import com.proyecto.sica.application.service.ValidadorVisita;
+import com.proyecto.sica.application.service.ValidadorIncidente;
 import com.proyecto.sica.application.usecase.ActualizarEmpresaUseCase;
 import com.proyecto.sica.application.usecase.ActualizarPersonaUseCase;
 import com.proyecto.sica.application.usecase.ActualizarUsuarioUseCase;
@@ -38,6 +39,11 @@ import com.proyecto.sica.application.usecase.RegularizarSalidaOlvidadaUseCase;
 import com.proyecto.sica.application.usecase.ResponderSolicitudVisitaUseCase;
 import com.proyecto.sica.application.usecase.SolicitarPaseTemporalUseCase;
 import com.proyecto.sica.application.usecase.SolicitarVisitaNoAnunciadaUseCase;
+import com.proyecto.sica.application.usecase.ActualizarIncidenteUseCase;
+import com.proyecto.sica.application.usecase.ConsultarAuditoriaUseCase;
+import com.proyecto.sica.application.usecase.ConsultarIncidentePorIdUseCase;
+import com.proyecto.sica.application.usecase.ConsultarIncidentesUseCase;
+import com.proyecto.sica.application.usecase.CrearIncidenteUseCase;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import com.proyecto.sica.infrastructure.persistence.AuditoriaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.EmpresaJdbcRepository;
@@ -48,6 +54,7 @@ import com.proyecto.sica.infrastructure.persistence.PersonaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.RolJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.UsuarioJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.VisitaJdbcRepository;
+import com.proyecto.sica.infrastructure.persistence.IncidenteJdbcRepository;
 
 /**
  * Ensambla manualmente los adaptadores y casos de uso, sin framework externo.
@@ -84,6 +91,11 @@ public final class ConfiguracionAplicacion {
     private final RegistrarCheckInUseCase registrarCheckInUseCase;
     private final RegistrarCheckOutUseCase registrarCheckOutUseCase;
     private final RegularizarSalidaOlvidadaUseCase regularizarSalidaOlvidadaUseCase;
+    private final CrearIncidenteUseCase crearIncidenteUseCase;
+    private final ConsultarIncidentesUseCase consultarIncidentesUseCase;
+    private final ConsultarIncidentePorIdUseCase consultarIncidentePorIdUseCase;
+    private final ActualizarIncidenteUseCase actualizarIncidenteUseCase;
+    private final ConsultarAuditoriaUseCase consultarAuditoriaUseCase;
 
     public ConfiguracionAplicacion() {
         ConnectionFactory connectionFactory = new ConnectionFactory(ConfiguracionBaseDatos.cargar());
@@ -103,6 +115,8 @@ public final class ConfiguracionAplicacion {
                 new EstadoVisitaJdbcRepository(connectionFactory);
         VisitaJdbcRepository visitaRepository = new VisitaJdbcRepository(
                 connectionFactory, personaRepository, usuarioRepository, transacciones);
+        IncidenteJdbcRepository incidenteRepository = new IncidenteJdbcRepository(
+                connectionFactory, visitaRepository, usuarioRepository, transacciones);
         inicializadorVisitasDemo = new InicializadorVisitasDemo(visitaRepository,
                 estadoVisitaRepository, personaRepository, usuarioRepository);
 
@@ -176,6 +190,18 @@ public final class ConfiguracionAplicacion {
                 visitaRepository, autorizacion, validadorVisita);
         regularizarSalidaOlvidadaUseCase = new RegularizarSalidaOlvidadaUseCase(
                 visitaRepository, autorizacion, validadorVisita);
+
+        ValidadorIncidente validadorIncidente = new ValidadorIncidente();
+        crearIncidenteUseCase = new CrearIncidenteUseCase(
+                incidenteRepository, visitaRepository, autorizacion, validadorIncidente);
+        consultarIncidentesUseCase = new ConsultarIncidentesUseCase(
+                incidenteRepository, autorizacion);
+        consultarIncidentePorIdUseCase = new ConsultarIncidentePorIdUseCase(
+                incidenteRepository, autorizacion, validadorIncidente);
+        actualizarIncidenteUseCase = new ActualizarIncidenteUseCase(
+                incidenteRepository, autorizacion, validadorIncidente);
+        consultarAuditoriaUseCase = new ConsultarAuditoriaUseCase(
+                auditoriaRepository, autorizacion);
     }
 
     public ServicioAutenticacion getServicioAutenticacion() {
@@ -292,5 +318,23 @@ public final class ConfiguracionAplicacion {
 
     public RegularizarSalidaOlvidadaUseCase getRegularizarSalidaOlvidadaUseCase() {
         return regularizarSalidaOlvidadaUseCase;
+    }
+
+    public CrearIncidenteUseCase getCrearIncidenteUseCase() { return crearIncidenteUseCase; }
+
+    public ConsultarIncidentesUseCase getConsultarIncidentesUseCase() {
+        return consultarIncidentesUseCase;
+    }
+
+    public ConsultarIncidentePorIdUseCase getConsultarIncidentePorIdUseCase() {
+        return consultarIncidentePorIdUseCase;
+    }
+
+    public ActualizarIncidenteUseCase getActualizarIncidenteUseCase() {
+        return actualizarIncidenteUseCase;
+    }
+
+    public ConsultarAuditoriaUseCase getConsultarAuditoriaUseCase() {
+        return consultarAuditoriaUseCase;
     }
 }
