@@ -57,6 +57,8 @@ public final class Main {
             ConfiguracionAplicacion configuracion = new ConfiguracionAplicacion();
             configuracion.getInicializadorUsuariosDemo().ejecutar()
                     .forEach(System.out::println);
+            configuracion.getInicializadorVisitasDemo().ejecutar()
+                    .forEach(System.out::println);
         } catch (RuntimeException excepcion) {
             System.err.println("No fue posible inicializar usuarios demo: " + excepcion.getMessage());
             System.exit(1);

@@ -36,7 +36,16 @@ INSERT INTO permisos (id, codigo, nombre, descripcion) VALUES
     (21, 'CREAR_PERSONA', 'Crear persona', 'Registrar trabajadores e invitados.'),
     (22, 'CONSULTAR_PERSONA', 'Consultar persona', 'Consultar trabajadores e invitados.'),
     (23, 'ACTUALIZAR_PERSONA', 'Actualizar persona', 'Modificar datos basicos de personas.'),
-    (24, 'CAMBIAR_ESTADO_ACCESO', 'Cambiar estado de acceso', 'Aplicar o retirar restricciones de acceso.')
+    (24, 'CAMBIAR_ESTADO_ACCESO', 'Cambiar estado de acceso', 'Aplicar o retirar restricciones de acceso.'),
+    (25, 'PRERREGISTRAR_VISITA', 'Prerregistrar visita', 'Crear una visita programada aprobada.'),
+    (26, 'SOLICITAR_INGRESO', 'Solicitar ingreso', 'Crear solicitudes no anunciadas o pases temporales.'),
+    (27, 'CONSULTAR_VISITA', 'Consultar visita', 'Consultar solicitudes y visitas autorizadas.'),
+    (28, 'APROBAR_SOLICITUD', 'Aprobar solicitud', 'Aprobar solicitudes dirigidas al funcionario.'),
+    (29, 'RECHAZAR_SOLICITUD', 'Rechazar solicitud', 'Rechazar solicitudes dirigidas al funcionario.'),
+    (30, 'REGISTRAR_CHECK_IN', 'Registrar check-in', 'Confirmar el ingreso fisico autorizado.'),
+    (31, 'REGISTRAR_CHECK_OUT', 'Registrar check-out', 'Confirmar la salida fisica.'),
+    (32, 'REGULARIZAR_SALIDA_OLVIDADA', 'Regularizar salida olvidada', 'Cerrar visitas abiertas con justificacion.'),
+    (33, 'CONSULTAR_HISTORIAL_VISITAS', 'Consultar historial de visitas', 'Consultar entradas, salidas y regularizaciones.')
 ON DUPLICATE KEY UPDATE
     codigo = VALUES(codigo),
     nombre = VALUES(nombre),
@@ -53,14 +62,35 @@ INSERT IGNORE INTO rol_permisos (rol_id, permiso_id) VALUES
     (2, 14), (2, 15), (2, 16), (2, 17), (2, 18), (2, 19),
     (2, 20), (2, 21), (2, 22), (2, 23), (2, 24);
 
+INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
+SELECT 2, id FROM permisos WHERE codigo IN (
+    'PRERREGISTRAR_VISITA', 'SOLICITAR_INGRESO', 'CONSULTAR_VISITA',
+    'APROBAR_SOLICITUD', 'RECHAZAR_SOLICITUD', 'REGISTRAR_CHECK_IN',
+    'REGISTRAR_CHECK_OUT', 'REGULARIZAR_SALIDA_OLVIDADA',
+    'CONSULTAR_HISTORIAL_VISITAS'
+);
+
 -- El guarda atiende el control diario de acceso.
 INSERT IGNORE INTO rol_permisos (rol_id, permiso_id) VALUES
     (3, 4), (3, 5), (3, 6), (3, 8), (3, 9), (3, 11),
     (3, 19), (3, 21), (3, 22), (3, 23);
 
+INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
+SELECT 3, id FROM permisos WHERE codigo IN (
+    'SOLICITAR_INGRESO', 'CONSULTAR_VISITA', 'REGISTRAR_CHECK_IN',
+    'REGISTRAR_CHECK_OUT', 'REGULARIZAR_SALIDA_OLVIDADA',
+    'CONSULTAR_HISTORIAL_VISITAS'
+);
+
 -- El funcionario gestiona y consulta las solicitudes de su empresa.
 INSERT IGNORE INTO rol_permisos (rol_id, permiso_id) VALUES
     (4, 5), (4, 6), (4, 19);
+
+INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
+SELECT 4, id FROM permisos WHERE codigo IN (
+    'PRERREGISTRAR_VISITA', 'CONSULTAR_VISITA', 'APROBAR_SOLICITUD',
+    'RECHAZAR_SOLICITUD', 'CONSULTAR_HISTORIAL_VISITAS', 'CONSULTAR_PERSONA'
+);
 
 INSERT INTO persona_estados_acceso (id, codigo, nombre, descripcion) VALUES
     (1, 'FUERA', 'Fuera de las instalaciones', 'La persona no registra un ingreso activo.'),
@@ -82,7 +112,14 @@ INSERT INTO visita_estados (id, codigo, nombre, descripcion) VALUES
     (5, 'PENDIENTE_REGULARIZACION', 'Pendiente de regularizacion', 'No se registro la salida oportunamente.'),
     (6, 'FINALIZADA', 'Finalizada', 'La visita o pase fue cerrado.'),
     (7, 'CANCELADA', 'Cancelada', 'La solicitud fue cancelada.'),
-    (8, 'VENCIDA', 'Vencida', 'La autorizacion no se utilizo dentro del plazo.')
+    (8, 'VENCIDA', 'Vencida', 'La autorizacion no se utilizo dentro del plazo.'),
+    (9, 'APROBADA', 'Aprobada', 'La visita esta autorizada pero aun no ha ingresado.'),
+    (10, 'PENDIENTE_APROBACION', 'Pendiente de aprobacion', 'Solicitud no anunciada pendiente del anfitrion.'),
+    (11, 'PENDIENTE_APROBACION_OLVIDO', 'Pendiente por carnet olvidado', 'Pase temporal pendiente de aprobacion.'),
+    (12, 'DENTRO', 'Dentro', 'La persona se encuentra fisicamente dentro.'),
+    (13, 'FUERA', 'Fuera', 'La visita finalizo con salida registrada.'),
+    (14, 'EXPIRADA', 'Expirada', 'La autorizacion o pase ya no puede utilizarse.'),
+    (15, 'CERRADA_POR_SISTEMA', 'Cerrada por sistema', 'Salida olvidada regularizada por el sistema.')
 ON DUPLICATE KEY UPDATE
     codigo = VALUES(codigo),
     nombre = VALUES(nombre),

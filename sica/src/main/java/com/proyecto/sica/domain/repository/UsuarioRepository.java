@@ -16,6 +16,8 @@ public interface UsuarioRepository {
 
     List<Usuario> listar();
 
+    List<Usuario> listarPorEmpresa(long empresaId);
+
     boolean existeCorreo(String correo, Long idExcluido);
 
     Usuario crearConAuditoria(Usuario usuario, EventoAuditoria evento);

@@ -73,12 +73,29 @@ public final class UsuarioJdbcRepository implements UsuarioRepository {
 
     @Override
     public List<Usuario> listar() {
+        return listarConSql(LISTAR, null);
+    }
+
+    @Override
+    public List<Usuario> listarPorEmpresa(long empresaId) {
+        String sql = "SELECT " + COLUMNAS + " FROM usuarios u "
+                + "LEFT JOIN empresas e ON e.id = u.empresa_id "
+                + "WHERE u.empresa_id = ? AND u.activo = TRUE "
+                + "ORDER BY u.apellidos, u.nombres";
+        return listarConSql(sql, sentencia -> sentencia.setLong(1, empresaId));
+    }
+
+    private List<Usuario> listarConSql(String sql, ConfiguradorSentencia configurador) {
         List<Usuario> usuarios = new ArrayList<>();
         try (Connection conexion = connectionFactory.obtenerConexion();
-                PreparedStatement sentencia = conexion.prepareStatement(LISTAR);
-                ResultSet resultado = sentencia.executeQuery()) {
-            while (resultado.next()) {
-                usuarios.add(mapear(resultado));
+                PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            if (configurador != null) {
+                configurador.configurar(sentencia);
+            }
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
+                    usuarios.add(mapear(resultado));
+                }
             }
             return usuarios;
         } catch (SQLException excepcion) {

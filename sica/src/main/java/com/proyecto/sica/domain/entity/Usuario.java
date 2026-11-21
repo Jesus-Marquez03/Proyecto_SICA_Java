@@ -83,4 +83,9 @@ public final class Usuario {
     public LocalDateTime getUltimoAcceso() {
         return ultimoAcceso;
     }
+
+    @Override
+    public String toString() {
+        return getNombreCompleto();
+    }
 }

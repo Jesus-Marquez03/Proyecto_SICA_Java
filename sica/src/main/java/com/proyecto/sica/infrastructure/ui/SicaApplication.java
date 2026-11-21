@@ -8,6 +8,7 @@ import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.infrastructure.ui.controller.EmpresaController;
 import com.proyecto.sica.infrastructure.ui.controller.EstadoAccesoController;
 import com.proyecto.sica.infrastructure.ui.controller.PersonaController;
+import com.proyecto.sica.infrastructure.ui.controller.VisitasController;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -21,6 +22,7 @@ public final class SicaApplication extends Application {
     private ServicioAutenticacion autenticacion;
     private ConfiguracionAplicacion configuracion;
     private LoginView loginView;
+    private VisitasController visitasController;
 
     public static void iniciar(String... args) {
         launch(args);
@@ -59,6 +61,7 @@ public final class SicaApplication extends Application {
         EmpresaView empresaView = new EmpresaView();
         PersonaView personaView = new PersonaView();
         EstadoAccesoView estadoView = new EstadoAccesoView();
+        VisitasView visitasView = new VisitasView();
         EmpresaController empresaController = new EmpresaController(empresaView, usuario,
                 configuracion.getCrearEmpresaUseCase(),
                 configuracion.getActualizarEmpresaUseCase(),
@@ -73,6 +76,19 @@ public final class SicaApplication extends Application {
                 configuracion.getConsultarPersonasUseCase(),
                 configuracion.getConsultarEstadosAccesoUseCase(),
                 configuracion.getCambiarEstadoAccesoUseCase());
+        visitasController = new VisitasController(visitasView, usuario,
+                configuracion.getBuscarPersonaPorDocumentoUseCase(),
+                configuracion.getConsultarEmpresasUseCase(),
+                configuracion.getConsultarAnfitrionesUseCase(),
+                configuracion.getPrerregistrarVisitaUseCase(),
+                configuracion.getSolicitarVisitaNoAnunciadaUseCase(),
+                configuracion.getSolicitarPaseTemporalUseCase(),
+                configuracion.getResponderSolicitudVisitaUseCase(),
+                configuracion.getConsultarVisitasUseCase(),
+                configuracion.getConsultarHistorialVisitasUseCase(),
+                configuracion.getRegistrarCheckInUseCase(),
+                configuracion.getRegistrarCheckOutUseCase(),
+                configuracion.getRegularizarSalidaOlvidadaUseCase());
 
         final DashboardView[] referencia = new DashboardView[1];
         DashboardView dashboard = new DashboardView(usuario, this::cerrarSesion,
@@ -87,12 +103,18 @@ public final class SicaApplication extends Application {
                 () -> {
                     referencia[0].mostrarContenido(estadoView.getRoot());
                     estadoController.cargar();
+                },
+                () -> {
+                    referencia[0].mostrarContenido(visitasView.getRoot());
+                    visitasController.cargar();
                 });
         referencia[0] = dashboard;
+        visitasController.cargar();
         aplicarEscena(new Scene(dashboard.getRoot(), 1180, 720));
     }
 
     private void cerrarSesion() {
+        cerrarPollingVisitas();
         autenticacion.cerrarSesion();
         mostrarLogin();
     }
@@ -104,9 +126,17 @@ public final class SicaApplication extends Application {
 
     @Override
     public void stop() {
+        cerrarPollingVisitas();
         if (autenticacion != null) {
             autenticacion.cerrarSesion();
         }
         AbandonedConnectionCleanupThread.checkedShutdown();
+    }
+
+    private void cerrarPollingVisitas() {
+        if (visitasController != null) {
+            visitasController.close();
+            visitasController = null;
+        }
     }
 }
