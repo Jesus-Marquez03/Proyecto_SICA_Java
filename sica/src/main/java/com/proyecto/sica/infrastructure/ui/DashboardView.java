@@ -20,14 +20,16 @@ public final class DashboardView {
 
     public DashboardView(Usuario usuario, Runnable alCerrarSesion,
             Runnable alAbrirEmpresas, Runnable alAbrirPersonas,
-            Runnable alAbrirEstados, Runnable alAbrirVisitas) {
+            Runnable alAbrirEstados, Runnable alAbrirVisitas,
+            Runnable alAbrirIncidentes, Runnable alAbrirAuditoria) {
         construir(usuario, alCerrarSesion, alAbrirEmpresas, alAbrirPersonas,
-                alAbrirEstados, alAbrirVisitas);
+                alAbrirEstados, alAbrirVisitas, alAbrirIncidentes, alAbrirAuditoria);
     }
 
     private void construir(Usuario usuario, Runnable alCerrarSesion,
             Runnable alAbrirEmpresas, Runnable alAbrirPersonas,
-            Runnable alAbrirEstados, Runnable alAbrirVisitas) {
+            Runnable alAbrirEstados, Runnable alAbrirVisitas,
+            Runnable alAbrirIncidentes, Runnable alAbrirAuditoria) {
         root.getStyleClass().add("dashboard-root");
         Label marca = new Label("SICA");
         marca.getStyleClass().add("marca-dashboard");
@@ -67,12 +69,18 @@ public final class DashboardView {
         Button personasButton = botonMenu("Personas", alAbrirPersonas);
         Button estadosButton = botonMenu("Estados de acceso", alAbrirEstados);
         Button visitasButton = botonMenu("Control de visitas", alAbrirVisitas);
+        Button incidentesButton = botonMenu("Incidentes", alAbrirIncidentes);
+        Button auditoriaButton = botonMenu("Auditoria", alAbrirAuditoria);
         empresasButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_EMPRESA));
         personasButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_PERSONA));
         estadosButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_PERSONA));
         visitasButton.setDisable(!usuario.getRol().tienePermiso(PermisosSistema.CONSULTAR_VISITA));
+        incidentesButton.setDisable(!usuario.getRol().tienePermiso(
+                PermisosSistema.CONSULTAR_INCIDENTE));
+        auditoriaButton.setDisable(!usuario.getRol().tienePermiso(
+                PermisosSistema.CONSULTAR_AUDITORIA));
         VBox menu = new VBox(8, new Label("MODULOS"), empresasButton,
-                personasButton, estadosButton, visitasButton);
+                personasButton, estadosButton, visitasButton, incidentesButton, auditoriaButton);
         menu.getStyleClass().add("menu-lateral");
         menu.setPadding(new Insets(24, 14, 24, 14));
         menu.setPrefWidth(190);
