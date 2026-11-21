@@ -47,3 +47,17 @@ Se conservaron `FUERA`, `DENTRO`, `SALIDA_PENDIENTE` y `BLOQUEADO` porque descri
 La migracion `003_personas_empresas.sql` tambien corrige una diferencia encontrada entre el esquema reconstruible y la base migrada: `usuarios.correo` debe ser obligatorio y `empresas.correo` opcional. Inserta los permisos granulares, sus relaciones por codigo y tres personas ficticias mediante operaciones repetibles que no sobrescriben datos locales.
 
 Los permisos antiguos se mantienen para no romper etapas previas. Los casos de uso de usuarios migraron a cuatro permisos especificos, y empresas/personas usan siete permisos adicionales. La autorizacion no depende de comparar nombres de roles en Java.
+
+## Cuarta etapa: control de visitas
+
+La tabla `visitas` ya contenia anfitrion, programacion, tipo de solicitud, aprobador, fechas de entrada y salida, campos de pase y datos de regularizacion. No se duplicaron. Solo faltaba `placa_vehiculo VARCHAR(20)`, opcional, y un indice por persona y estado para localizar rapidamente una visita abierta.
+
+Se agregaron los codigos `APROBADA`, `PENDIENTE_APROBACION`, `PENDIENTE_APROBACION_OLVIDO`, `DENTRO`, `FUERA`, `EXPIRADA` y `CERRADA_POR_SISTEMA`. El estado `RECHAZADA` existente se reutiliza. Los codigos anteriores permanecen para conservar registros historicos y compatibilidad. La aplicacion resuelve cada ID desde `visita_estados`, por lo que no depende de un numero fijo.
+
+Los campos `codigo_pase` y `fecha_vencimiento_pase` existentes permiten un pase temporal de un solo uso: el check-in comprueba vigencia y ausencia de una entrada previa. `fecha_cierre_sistema`, `regularizada_por_usuario_id` y `motivo_regularizacion` guardan la salida olvidada sin eliminar ni alterar el historial anterior.
+
+Se agregaron nueve permisos granulares de visitas. El Funcionario atiende unicamente registros cuyo `anfitrion_usuario_id` coincide con su usuario y cuya empresa coincide con la suya. No se creo `notificaciones`: las pantallas realizan consultas periodicas sobre `visitas`, una solucion suficiente para dos aplicaciones de escritorio conectadas a la misma base.
+
+Las operaciones que compiten usan `SELECT ... FOR UPDATE` y vuelven a validar el estado dentro de una transaccion. La auditoria comparte esa conexion. Para tolerar una diferencia entre el reloj de la JVM y el de MySQL, `fecha_respuesta` usa el mayor valor entre `CURRENT_TIMESTAMP` y `fecha_solicitud`, manteniendo la restriccion temporal sin confiar en el reloj del cliente.
+
+La migracion `004_control_visitas.sql` es repetible: consulta `information_schema` antes de crear columna e indice, e inserta catalogos y relaciones con claves unicas. No elimina ni modifica visitas preexistentes.

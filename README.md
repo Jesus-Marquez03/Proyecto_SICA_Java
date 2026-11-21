@@ -1,6 +1,6 @@
 # SICA - Sistema Integrado de Control de Acceso
 
-Proyecto academico en Java para controlar el acceso a Zona Acme. La etapa actual implementa seguridad, empresas, trabajadores, invitados, estados de acceso, auditoria y pantallas JavaFX. Aun no incluye los modulos completos de visitas, incidentes ni reportes.
+Proyecto academico en Java para controlar el acceso a Zona Acme. La etapa actual implementa seguridad, empresas, personas, control de visitas, aprobaciones, pases temporales, entradas, salidas, regularizaciones, auditoria y pantallas JavaFX. Aun no incluye el modulo completo de incidentes ni reportes finales.
 
 ## Tecnologias
 
@@ -17,10 +17,10 @@ No se utiliza Spring Boot, Hibernate, JPA, Lombok, FXML ni librerias visuales ex
 
 El paquete base es `com.proyecto.sica`:
 
-- `domain/entity`: usuarios, roles, permisos, empresas, personas y estados de acceso.
+- `domain/entity`: usuarios, empresas, personas, visitas y sus estados.
 - `domain/repository`: puertos de persistencia independientes de JDBC.
 - `application/service`: autenticacion, autorizacion, sesion, hash y validadores.
-- `application/usecase`: operaciones autorizadas de usuarios, empresas y personas.
+- `application/usecase`: operaciones autorizadas de usuarios, empresas, personas y visitas.
 - `infrastructure/database`: fabrica y comprobacion de conexiones.
 - `infrastructure/persistence`: adaptadores JDBC y transacciones.
 - `infrastructure/ui`: vistas JavaFX, controladores MVC y tareas asincronas.
@@ -60,9 +60,10 @@ Un volumen nuevo ejecuta automaticamente esquema, datos y migracion. Para una ba
 ```powershell
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/03-usuarios-seguridad.sql'
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/04-personas-empresas.sql'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/05-control-visitas.sql'
 ```
 
-Ambas migraciones son repetibles. La tercera etapa agrega `personas.foto_url`, los estados administrativos, permisos granulares y datos ficticios solo cuando faltan. No borra ni reemplaza registros existentes.
+Las migraciones son repetibles. La cuarta agrega solamente `visitas.placa_vehiculo`, un indice para visitas abiertas, estados de visita y permisos granulares. No borra ni reemplaza visitas existentes.
 
 Para detener MySQL conservando los datos:
 
@@ -85,12 +86,12 @@ mvn test
 La prueba de integracion con MySQL se ejecuta de forma explicita y requiere el contenedor y las variables anteriores:
 
 ```powershell
-mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT" test
+mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT" test
 ```
 
 ## 4. Inicializar usuarios academicos
 
-La inicializacion genera hashes seguros y no reemplaza usuarios existentes:
+La inicializacion genera hashes seguros y cuatro visitas ficticias. No reemplaza usuarios ni visitas existentes:
 
 ```powershell
 mvn exec:java "-Dexec.args=--inicializar-demo"
@@ -113,7 +114,7 @@ Estas contrasenas son publicas y deliberadamente de demostracion. No deben reuti
 mvn javafx:run
 ```
 
-Tambien se puede iniciar `Main` con `--javafx`. Tras el login, el menu lateral abre Empresas, Personas y Estados de acceso. Los botones se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. Las consultas JDBC se ejecutan mediante `Task`, fuera del hilo grafico.
+Tambien se puede iniciar `Main` con `--javafx`. El menu lateral incluye Control de visitas con paneles de Guarda, Funcionario e Historial. Los botones se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
 
 La comprobacion JDBC sigue disponible:
 
@@ -134,13 +135,14 @@ Cada hash contiene algoritmo, 600 000 iteraciones, sal aleatoria de 16 bytes y r
 
 ## Autorizacion RBAC
 
-Los permisos se consultan desde `roles`, `permisos` y `rol_permisos`. `ServicioAutorizacion` comprueba usuario activo, rol activo y codigo de permiso. La migracion conserva los 13 codigos originales por compatibilidad y agrega 11 codigos granulares que se usan realmente:
+Los permisos se consultan desde `roles`, `permisos` y `rol_permisos`. `ServicioAutorizacion` comprueba usuario activo, rol activo y codigo de permiso. Las migraciones conservan los codigos anteriores por compatibilidad y agregan permisos granulares que se usan realmente:
 
 - Usuarios: `CREAR_USUARIO`, `CONSULTAR_USUARIO`, `ACTUALIZAR_USUARIO` y `CAMBIAR_ESTADO_USUARIO`.
 - Empresas: `CREAR_EMPRESA`, `CONSULTAR_EMPRESA` y `ACTUALIZAR_EMPRESA`.
 - Personas: `CREAR_PERSONA`, `CONSULTAR_PERSONA`, `ACTUALIZAR_PERSONA` y `CAMBIAR_ESTADO_ACCESO`.
+- Visitas: `PRERREGISTRAR_VISITA`, `SOLICITAR_INGRESO`, `CONSULTAR_VISITA`, `APROBAR_SOLICITUD`, `RECHAZAR_SOLICITUD`, `REGISTRAR_CHECK_IN`, `REGISTRAR_CHECK_OUT`, `REGULARIZAR_SALIDA_OLVIDADA` y `CONSULTAR_HISTORIAL_VISITAS`.
 
-Superusuario y Supervisor gestionan este modulo. El Guarda puede consultar empresas y crear, consultar o actualizar personas, pero no cambiar restricciones administrativas. El Funcionario solo consulta empresas. Esta distribucion evita conceder permisos administrativos a todos.
+Superusuario y Supervisor poseen los permisos del modulo de visitas. El Guarda puede solicitar ingresos y pases, consultar, registrar entradas y salidas y regularizar. El Funcionario puede prerregistrar y responder solamente solicitudes dirigidas a el y de su empresa. Tambien puede consultar personas para seleccionar invitados, pero no administrarlas. Ocultar un boton nunca sustituye la comprobacion del caso de uso.
 
 ## Gestion de usuarios y auditoria
 
@@ -164,6 +166,61 @@ Datos ficticios incluidos de forma idempotente:
 
 Las creaciones, actualizaciones y cambios de estado registran usuario, accion, tabla, ID y una descripcion no sensible. `EjecutorTransaccionalJdbc` confirma el cambio y la auditoria juntos o revierte ambos.
 
+## Control de visitas
+
+### Cuatro flujos implementados
+
+1. **Invitado prerregistrado:** el Funcionario elige invitado, empresa, anfitrion, fecha futura, motivo y placa opcional. La visita nace `APROBADA`, pero aun no representa presencia fisica. El Guarda busca el documento y realiza el check-in despues de validar autorizacion y estado de acceso.
+2. **Invitado no anunciado:** el Guarda crea una solicitud `PENDIENTE_APROBACION`. El anfitrion asignado puede aprobarla o rechazarla; un funcionario ajeno no puede responderla. Solamente una visita aprobada permite el check-in.
+3. **Carnet olvidado:** el Guarda crea una solicitud `PENDIENTE_APROBACION_OLVIDO` para un trabajador. Al aprobarse, el codigo de pase y su vencimiento autorizan un unico ingreso durante ese dia. El check-in consume el pase.
+4. **Salida olvidada:** al confirmar un nuevo ingreso autorizado, una visita anterior `DENTRO` se cierra como `CERRADA_POR_SISTEMA`. El cierre anterior, su auditoria y el nuevo check-in se confirman en una sola transaccion.
+
+La prohibicion de ingreso siempre prevalece. Una solicitud pendiente, rechazada o expirada no permite registrar entrada.
+
+### Estados y transiciones
+
+Los IDs se consultan por codigo en `visita_estados`; no se codifican numeros en Java.
+
+| Estado actual | Operacion valida | Estado resultante |
+| --- | --- | --- |
+| `PENDIENTE_APROBACION` | Aprobar / rechazar | `APROBADA` / `RECHAZADA` |
+| `PENDIENTE_APROBACION_OLVIDO` | Aprobar / rechazar | `APROBADA` / `RECHAZADA` |
+| `APROBADA` | Check-in valido | `DENTRO` |
+| `DENTRO` | Check-out | `FUERA` |
+| `DENTRO` anterior | Regularizacion | `CERRADA_POR_SISTEMA` |
+
+`EXPIRADA` representa una autorizacion vencida. Se rechazan respuestas repetidas, check-in pendiente o rechazado, dos check-outs y la reutilizacion de un pase consumido.
+
+### Concurrencia, transacciones y auditoria
+
+Las decisiones, entradas, salidas y regularizaciones abren transacciones cortas. `VisitaJdbcRepository` bloquea la fila con `SELECT ... FOR UPDATE`, vuelve a leer el estado y solo entonces escribe. Por eso dos funcionarios no pueden aprobar y rechazar a la vez, dos guardas no registran la misma entrada y una salida no se confirma dos veces.
+
+`EjecutorTransaccionalJdbc` comparte la misma conexion con los cambios y uno o varios eventos de auditoria. Cualquier error ejecuta `rollback`. Se registran `PRERREGISTRO_VISITA`, `SOLICITUD_VISITA_NO_ANUNCIADA`, `SOLICITUD_PASE_TEMPORAL`, `APROBACION_VISITA`, `RECHAZO_VISITA`, `CHECK_IN_VISITA`, `CHECK_OUT_VISITA` y `REGULARIZACION_SALIDA`.
+
+### Actualizacion entre dos sesiones
+
+El panel consulta cada cuatro segundos las solicitudes del anfitrion o las visitas del documento buscado. `ActualizadorPeriodico` usa un `ScheduledExecutorService` daemon, evita consultas superpuestas y entrega los resultados a JavaFX mediante `Platform.runLater`. Se cierra al salir de la sesion o detener la aplicacion. Es **polling**, no una notificacion push; dos instancias conectadas a la misma base ven el cambio sin reiniciarse.
+
+### Pantallas y datos ficticios
+
+Control de visitas contiene tres paneles reutilizables:
+
+- **Guarda:** busca por documento, muestra persona, foto URL y estado; solicita visita o pase; registra check-in, check-out y regularizacion.
+- **Funcionario:** prerregistra invitados y aprueba o rechaza solicitudes propias.
+- **Historial:** filtra por documento, fecha y estado. Un Funcionario solo ve visitas en las que es anfitrion.
+
+La inicializacion controlada agrega, si faltan, `DEMO-VIS-PRE`, `DEMO-VIS-NO`, `DEMO-PASE-TEMP` y `DEMO-SALIDA-ABIERTA`. Tambien permanece Bruno Restringido Demo para comprobar la denegacion de ingreso.
+
+### Prueba manual con dos usuarios
+
+1. Abra dos terminales en `sica` y ejecute `mvn javafx:run` en cada una.
+2. Inicie una como `guarda@sica.example` y otra como `funcionario@sica.example`.
+3. En la sesion del Guarda, abra **Control de visitas**, busque el documento de Carla Invitada Demo y elija empresa y anfitrion.
+4. Escriba el motivo y pulse **Solicitar ingreso**. La fila queda `PENDIENTE_APROBACION`.
+5. En la sesion del Funcionario, espere como maximo cuatro segundos, seleccione la solicitud y pulse **Aprobar**.
+6. La sesion del Guarda mostrara `APROBADA` en el siguiente ciclo. Seleccione la visita y pulse **Registrar entrada**; el estado cambiara a `DENTRO`.
+7. Al retirarse la persona, seleccione la visita y pulse **Registrar salida**; terminara `FUERA`.
+
 ## Principios y patrones aplicados
 
 - Responsabilidad unica: hash, autenticacion, autorizacion, validacion, UI y JDBC estan separados.
@@ -174,6 +231,8 @@ Las creaciones, actualizaciones y cambios de estado registran usuario, accion, t
 - Inyeccion por constructor: las dependencias se ensamblan en `ConfiguracionAplicacion`.
 - MVC: las vistas JavaFX capturan/muestran datos y los controladores llaman casos de uso.
 - Ejecutor transaccional: reutiliza el limite de transaccion y evita duplicar `commit`, `rollback` y auditoria.
+- Fabrica simple: `FabricaVisita` centraliza la construccion valida de cada tipo de solicitud.
+- Polling Observer: el actualizador entrega periodicamente una lista a su callback sin acoplarse a la vista.
 
 No se agregaron patrones cuyo uso no fuera necesario.
 
@@ -186,7 +245,9 @@ Se conservan las 11 tablas originales. Los cambios de seguridad son:
 - `bitacora_auditoria.nombre_usuario_intentado VARCHAR(120)` para aceptar correos completos.
 - `personas.foto_url VARCHAR(500)` para una referencia opcional, sin almacenar archivos binarios.
 - Estados `ACTIVO` y `PROHIBICION_INGRESO` sin eliminar los estados fisicos previos.
-- Once permisos granulares y su distribucion por rol.
+- Veinte permisos granulares agregados entre las etapas de seguridad, personas y visitas, distribuidos segun cada rol.
+- `visitas.placa_vehiculo VARCHAR(20)` e indice `(persona_id, estado_visita_id)` para los flujos de acceso.
+- Siete estados nuevos de visita; `RECHAZADA` se reutiliza porque ya existia.
 - Coherencia entre esquema y migraciones: `usuarios.correo` obligatorio y `empresas.correo` opcional.
 
 Los detalles se encuentran en `database/decisiones-bd.md`.
@@ -195,4 +256,4 @@ Los detalles se encuentran en `database/decisiones-bd.md`.
 
 - `main`: entrega estable; no se modifica durante esta etapa.
 - `develop`: integracion.
-- `feature/personas-empresas`: desarrollo de esta etapa.
+- `feature/control-visitas`: desarrollo de la cuarta etapa.
