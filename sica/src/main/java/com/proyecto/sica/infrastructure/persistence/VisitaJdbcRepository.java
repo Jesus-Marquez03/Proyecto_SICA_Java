@@ -164,7 +164,8 @@ public final class VisitaJdbcRepository implements VisitaRepository {
             }
             try (PreparedStatement actualizacion = conexion.prepareStatement(
                     "UPDATE visitas SET estado_visita_id=?,respondido_por_usuario_id=?,"
-                            + "fecha_respuesta=CURRENT_TIMESTAMP WHERE id=?")) {
+                            + "fecha_respuesta=GREATEST(CURRENT_TIMESTAMP,fecha_solicitud) "
+                            + "WHERE id=?")) {
                 actualizacion.setInt(1, nuevoEstadoId);
                 actualizacion.setLong(2, usuarioId);
                 actualizacion.setLong(3, visitaId);
