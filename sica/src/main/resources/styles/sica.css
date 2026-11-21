@@ -162,3 +162,19 @@
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
 }
+
+.tab-pane .tab-header-area .tab {
+    -fx-background-color: #e7e8eb;
+    -fx-padding: 8px 14px;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+}
+
+.text-area {
+    -fx-background-color: white;
+    -fx-border-color: #d7d9dd;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+}
