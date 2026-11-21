@@ -5,6 +5,7 @@ import com.proyecto.sica.domain.repository.RepositorioException;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -23,11 +24,19 @@ public final class EjecutorTransaccionalJdbc {
 
     public <T> T ejecutar(String mensajeError, OperacionJdbc<T> operacion,
             Function<T, EventoAuditoria> crearEvento) {
+        return ejecutarConAuditorias(mensajeError, operacion,
+                resultado -> List.of(crearEvento.apply(resultado)));
+    }
+
+    public <T> T ejecutarConAuditorias(String mensajeError, OperacionJdbc<T> operacion,
+            Function<T, List<EventoAuditoria>> crearEventos) {
         try (Connection conexion = connectionFactory.obtenerConexion()) {
             conexion.setAutoCommit(false);
             try {
                 T resultado = operacion.ejecutar(conexion);
-                auditoriaRepository.registrar(conexion, crearEvento.apply(resultado));
+                for (EventoAuditoria evento : crearEventos.apply(resultado)) {
+                    auditoriaRepository.registrar(conexion, evento);
+                }
                 conexion.commit();
                 return resultado;
             } catch (SQLException excepcion) {
