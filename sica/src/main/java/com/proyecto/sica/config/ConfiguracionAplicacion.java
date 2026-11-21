@@ -1,6 +1,7 @@
 package com.proyecto.sica.config;
 
 import com.proyecto.sica.application.service.InicializadorUsuariosDemo;
+import com.proyecto.sica.application.service.InicializadorVisitasDemo;
 import com.proyecto.sica.application.service.FabricaVisita;
 import com.proyecto.sica.application.service.GeneradorNumeroVisita;
 import com.proyecto.sica.application.service.ProtectorPassword;
@@ -56,6 +57,7 @@ public final class ConfiguracionAplicacion {
     private final ServicioAutenticacion servicioAutenticacion;
     private final SesionUsuario sesionUsuario;
     private final InicializadorUsuariosDemo inicializadorUsuariosDemo;
+    private final InicializadorVisitasDemo inicializadorVisitasDemo;
     private final CrearUsuarioUseCase crearUsuarioUseCase;
     private final ConsultarUsuariosUseCase consultarUsuariosUseCase;
     private final ConsultarUsuarioPorIdUseCase consultarUsuarioPorIdUseCase;
@@ -101,6 +103,8 @@ public final class ConfiguracionAplicacion {
                 new EstadoVisitaJdbcRepository(connectionFactory);
         VisitaJdbcRepository visitaRepository = new VisitaJdbcRepository(
                 connectionFactory, personaRepository, usuarioRepository, transacciones);
+        inicializadorVisitasDemo = new InicializadorVisitasDemo(visitaRepository,
+                estadoVisitaRepository, personaRepository, usuarioRepository);
 
         ProtectorPassword protectorPassword = new ProtectorPassword();
         sesionUsuario = new SesionUsuario();
@@ -184,6 +188,10 @@ public final class ConfiguracionAplicacion {
 
     public InicializadorUsuariosDemo getInicializadorUsuariosDemo() {
         return inicializadorUsuariosDemo;
+    }
+
+    public InicializadorVisitasDemo getInicializadorVisitasDemo() {
+        return inicializadorVisitasDemo;
     }
 
     public CrearUsuarioUseCase getCrearUsuarioUseCase() {
