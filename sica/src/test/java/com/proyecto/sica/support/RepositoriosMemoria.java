@@ -71,6 +71,14 @@ public final class RepositoriosMemoria {
         }
 
         @Override
+        public List<Usuario> listarPorEmpresa(long empresaId) {
+            return usuarios.values().stream()
+                    .filter(usuario -> usuario.isActivo() && usuario.getEmpresaId() != null
+                            && usuario.getEmpresaId() == empresaId)
+                    .toList();
+        }
+
+        @Override
         public boolean existeCorreo(String correo, Long idExcluido) {
             return usuarios.values().stream().anyMatch(usuario ->
                     usuario.getCorreo().equalsIgnoreCase(correo)
