@@ -203,6 +203,9 @@ CREATE TABLE IF NOT EXISTS incidentes (
     fecha_cierre DATETIME,
     INDEX idx_incidentes_fecha (fecha_incidente),
     INDEX idx_incidentes_estado_gravedad (estado, gravedad),
+    INDEX idx_incidentes_visita_fecha (visita_id, fecha_incidente),
+    INDEX idx_incidentes_persona_fecha (persona_id, fecha_incidente),
+    INDEX idx_incidentes_reportado_fecha (reportado_por_usuario_id, fecha_incidente),
     CONSTRAINT chk_incidentes_gravedad
         CHECK (gravedad IN ('BAJA', 'MEDIA', 'ALTA', 'CRITICA')),
     CONSTRAINT chk_incidentes_estado
@@ -234,6 +237,7 @@ CREATE TABLE IF NOT EXISTS bitacora_auditoria (
     INDEX idx_bitacora_fecha (fecha_evento),
     INDEX idx_bitacora_usuario_fecha (usuario_id, fecha_evento),
     INDEX idx_bitacora_accion_resultado (accion, resultado),
+    INDEX idx_bitacora_entidad_registro_fecha (entidad, entidad_id, fecha_evento),
     CONSTRAINT chk_bitacora_resultado
         CHECK (resultado IN ('EXITOSO', 'FALLIDO')),
     CONSTRAINT fk_bitacora_usuario
