@@ -89,7 +89,7 @@ INSERT IGNORE INTO rol_permisos (rol_id, permiso_id) VALUES
 INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
 SELECT 4, id FROM permisos WHERE codigo IN (
     'PRERREGISTRAR_VISITA', 'CONSULTAR_VISITA', 'APROBAR_SOLICITUD',
-    'RECHAZAR_SOLICITUD', 'CONSULTAR_HISTORIAL_VISITAS'
+    'RECHAZAR_SOLICITUD', 'CONSULTAR_HISTORIAL_VISITAS', 'CONSULTAR_PERSONA'
 );
 
 INSERT INTO persona_estados_acceso (id, codigo, nombre, descripcion) VALUES
