@@ -86,7 +86,7 @@ public final class VisitaJdbcRepository implements VisitaRepository {
 
     @Override
     public List<Visita> listarHistorial(String numeroDocumento, LocalDate desde,
-            LocalDate hasta, String estadoCodigo) {
+            LocalDate hasta, String estadoCodigo, Long anfitrionId) {
         StringBuilder sql = new StringBuilder(BASE)
                 .append(" JOIN personas p ON p.id=v.visitante_persona_id WHERE 1=1");
         List<Object> parametros = new ArrayList<>();
@@ -105,6 +105,10 @@ public final class VisitaJdbcRepository implements VisitaRepository {
         if (estadoCodigo != null && !estadoCodigo.isBlank()) {
             sql.append(" AND ev.codigo=?");
             parametros.add(estadoCodigo);
+        }
+        if (anfitrionId != null) {
+            sql.append(" AND v.anfitrion_usuario_id=?");
+            parametros.add(anfitrionId);
         }
         sql.append(" ORDER BY v.fecha_solicitud DESC");
         return buscarLista(sql.toString(), sentencia -> {

@@ -22,6 +22,7 @@ public final class ConsultarHistorialVisitasUseCase {
     public List<Visita> ejecutar(Usuario actor, String documento, LocalDate desde,
             LocalDate hasta, String estadoCodigo) {
         autorizacion.verificarPermiso(actor, PermisosSistema.CONSULTAR_HISTORIAL_VISITAS);
-        return repositorio.listarHistorial(documento, desde, hasta, estadoCodigo);
+        Long anfitrionId = actor.getRol().isRequiereEmpresa() ? actor.getId() : null;
+        return repositorio.listarHistorial(documento, desde, hasta, estadoCodigo, anfitrionId);
     }
 }

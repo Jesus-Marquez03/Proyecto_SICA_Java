@@ -284,7 +284,7 @@ class VisitaUseCaseTest {
                     && v.getEstado().getCodigo().startsWith("PENDIENTE_APROBACION")).toList();
         }
         @Override public synchronized List<Visita> listarHistorial(String documento,
-                LocalDate desde, LocalDate hasta, String estado) {
+                LocalDate desde, LocalDate hasta, String estado, Long anfitrionId) {
             return List.copyOf(visitas.values());
         }
         @Override public synchronized Visita crearConAuditoria(Visita visita, EventoAuditoria evento) {

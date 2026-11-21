@@ -14,7 +14,7 @@ public interface VisitaRepository {
     List<Visita> buscarPorDocumento(String tipoDocumento, String numeroDocumento);
     List<Visita> listarPendientesPorAnfitrion(long anfitrionId);
     List<Visita> listarHistorial(String numeroDocumento, LocalDate desde,
-            LocalDate hasta, String estadoCodigo);
+            LocalDate hasta, String estadoCodigo, Long anfitrionId);
     Visita crearConAuditoria(Visita visita, EventoAuditoria evento);
     Visita responderConAuditoria(long visitaId, long usuarioId, int estadoPendienteId,
             int nuevoEstadoId, EventoAuditoria evento);
