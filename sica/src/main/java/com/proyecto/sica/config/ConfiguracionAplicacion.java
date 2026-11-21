@@ -2,6 +2,7 @@ package com.proyecto.sica.config;
 
 import com.proyecto.sica.application.service.InicializadorUsuariosDemo;
 import com.proyecto.sica.application.service.InicializadorVisitasDemo;
+import com.proyecto.sica.application.service.InicializadorIncidentesDemo;
 import com.proyecto.sica.application.service.FabricaVisita;
 import com.proyecto.sica.application.service.GeneradorNumeroVisita;
 import com.proyecto.sica.application.service.ProtectorPassword;
@@ -65,6 +66,7 @@ public final class ConfiguracionAplicacion {
     private final SesionUsuario sesionUsuario;
     private final InicializadorUsuariosDemo inicializadorUsuariosDemo;
     private final InicializadorVisitasDemo inicializadorVisitasDemo;
+    private final InicializadorIncidentesDemo inicializadorIncidentesDemo;
     private final CrearUsuarioUseCase crearUsuarioUseCase;
     private final ConsultarUsuariosUseCase consultarUsuariosUseCase;
     private final ConsultarUsuarioPorIdUseCase consultarUsuarioPorIdUseCase;
@@ -119,6 +121,8 @@ public final class ConfiguracionAplicacion {
                 connectionFactory, visitaRepository, usuarioRepository, transacciones);
         inicializadorVisitasDemo = new InicializadorVisitasDemo(visitaRepository,
                 estadoVisitaRepository, personaRepository, usuarioRepository);
+        inicializadorIncidentesDemo = new InicializadorIncidentesDemo(incidenteRepository,
+                visitaRepository, estadoVisitaRepository, personaRepository, usuarioRepository);
 
         ProtectorPassword protectorPassword = new ProtectorPassword();
         sesionUsuario = new SesionUsuario();
@@ -218,6 +222,10 @@ public final class ConfiguracionAplicacion {
 
     public InicializadorVisitasDemo getInicializadorVisitasDemo() {
         return inicializadorVisitasDemo;
+    }
+
+    public InicializadorIncidentesDemo getInicializadorIncidentesDemo() {
+        return inicializadorIncidentesDemo;
     }
 
     public CrearUsuarioUseCase getCrearUsuarioUseCase() {
