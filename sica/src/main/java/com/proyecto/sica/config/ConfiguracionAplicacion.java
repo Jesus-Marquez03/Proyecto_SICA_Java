@@ -1,6 +1,8 @@
 package com.proyecto.sica.config;
 
 import com.proyecto.sica.application.service.InicializadorUsuariosDemo;
+import com.proyecto.sica.application.service.FabricaVisita;
+import com.proyecto.sica.application.service.GeneradorNumeroVisita;
 import com.proyecto.sica.application.service.ProtectorPassword;
 import com.proyecto.sica.application.service.ServicioAutenticacion;
 import com.proyecto.sica.application.service.ServicioAutorizacion;
@@ -8,6 +10,7 @@ import com.proyecto.sica.application.service.SesionUsuario;
 import com.proyecto.sica.application.service.ValidadorEmpresa;
 import com.proyecto.sica.application.service.ValidadorPersona;
 import com.proyecto.sica.application.service.ValidadorUsuario;
+import com.proyecto.sica.application.service.ValidadorVisita;
 import com.proyecto.sica.application.usecase.ActualizarEmpresaUseCase;
 import com.proyecto.sica.application.usecase.ActualizarPersonaUseCase;
 import com.proyecto.sica.application.usecase.ActualizarUsuarioUseCase;
@@ -24,14 +27,26 @@ import com.proyecto.sica.application.usecase.ConsultarUsuariosUseCase;
 import com.proyecto.sica.application.usecase.CrearEmpresaUseCase;
 import com.proyecto.sica.application.usecase.CrearPersonaUseCase;
 import com.proyecto.sica.application.usecase.CrearUsuarioUseCase;
+import com.proyecto.sica.application.usecase.ConsultarAnfitrionesUseCase;
+import com.proyecto.sica.application.usecase.ConsultarHistorialVisitasUseCase;
+import com.proyecto.sica.application.usecase.ConsultarVisitasUseCase;
+import com.proyecto.sica.application.usecase.PrerregistrarVisitaUseCase;
+import com.proyecto.sica.application.usecase.RegistrarCheckInUseCase;
+import com.proyecto.sica.application.usecase.RegistrarCheckOutUseCase;
+import com.proyecto.sica.application.usecase.RegularizarSalidaOlvidadaUseCase;
+import com.proyecto.sica.application.usecase.ResponderSolicitudVisitaUseCase;
+import com.proyecto.sica.application.usecase.SolicitarPaseTemporalUseCase;
+import com.proyecto.sica.application.usecase.SolicitarVisitaNoAnunciadaUseCase;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import com.proyecto.sica.infrastructure.persistence.AuditoriaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.EmpresaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.EjecutorTransaccionalJdbc;
 import com.proyecto.sica.infrastructure.persistence.EstadoAccesoJdbcRepository;
+import com.proyecto.sica.infrastructure.persistence.EstadoVisitaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.PersonaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.RolJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.UsuarioJdbcRepository;
+import com.proyecto.sica.infrastructure.persistence.VisitaJdbcRepository;
 
 /**
  * Ensambla manualmente los adaptadores y casos de uso, sin framework externo.
@@ -57,6 +72,16 @@ public final class ConfiguracionAplicacion {
     private final BuscarPersonaPorDocumentoUseCase buscarPersonaPorDocumentoUseCase;
     private final ConsultarEstadosAccesoUseCase consultarEstadosAccesoUseCase;
     private final CambiarEstadoAccesoUseCase cambiarEstadoAccesoUseCase;
+    private final PrerregistrarVisitaUseCase prerregistrarVisitaUseCase;
+    private final SolicitarVisitaNoAnunciadaUseCase solicitarVisitaNoAnunciadaUseCase;
+    private final SolicitarPaseTemporalUseCase solicitarPaseTemporalUseCase;
+    private final ResponderSolicitudVisitaUseCase responderSolicitudVisitaUseCase;
+    private final ConsultarVisitasUseCase consultarVisitasUseCase;
+    private final ConsultarHistorialVisitasUseCase consultarHistorialVisitasUseCase;
+    private final ConsultarAnfitrionesUseCase consultarAnfitrionesUseCase;
+    private final RegistrarCheckInUseCase registrarCheckInUseCase;
+    private final RegistrarCheckOutUseCase registrarCheckOutUseCase;
+    private final RegularizarSalidaOlvidadaUseCase regularizarSalidaOlvidadaUseCase;
 
     public ConfiguracionAplicacion() {
         ConnectionFactory connectionFactory = new ConnectionFactory(ConfiguracionBaseDatos.cargar());
@@ -72,6 +97,10 @@ public final class ConfiguracionAplicacion {
                 connectionFactory, transacciones);
         UsuarioJdbcRepository usuarioRepository = new UsuarioJdbcRepository(
                 connectionFactory, rolRepository, auditoriaRepository);
+        EstadoVisitaJdbcRepository estadoVisitaRepository =
+                new EstadoVisitaJdbcRepository(connectionFactory);
+        VisitaJdbcRepository visitaRepository = new VisitaJdbcRepository(
+                connectionFactory, personaRepository, usuarioRepository, transacciones);
 
         ProtectorPassword protectorPassword = new ProtectorPassword();
         sesionUsuario = new SesionUsuario();
@@ -119,6 +148,30 @@ public final class ConfiguracionAplicacion {
                 estadoRepository, autorizacion);
         cambiarEstadoAccesoUseCase = new CambiarEstadoAccesoUseCase(
                 personaRepository, estadoRepository, autorizacion);
+
+        ValidadorVisita validadorVisita = new ValidadorVisita(personaRepository,
+                empresaRepository, usuarioRepository, estadoVisitaRepository);
+        FabricaVisita fabricaVisita = new FabricaVisita(new GeneradorNumeroVisita());
+        prerregistrarVisitaUseCase = new PrerregistrarVisitaUseCase(
+                visitaRepository, autorizacion, validadorVisita, fabricaVisita);
+        solicitarVisitaNoAnunciadaUseCase = new SolicitarVisitaNoAnunciadaUseCase(
+                visitaRepository, autorizacion, validadorVisita, fabricaVisita);
+        solicitarPaseTemporalUseCase = new SolicitarPaseTemporalUseCase(
+                visitaRepository, autorizacion, validadorVisita, fabricaVisita);
+        responderSolicitudVisitaUseCase = new ResponderSolicitudVisitaUseCase(
+                visitaRepository, autorizacion, validadorVisita);
+        consultarVisitasUseCase = new ConsultarVisitasUseCase(
+                visitaRepository, autorizacion);
+        consultarHistorialVisitasUseCase = new ConsultarHistorialVisitasUseCase(
+                visitaRepository, autorizacion);
+        consultarAnfitrionesUseCase = new ConsultarAnfitrionesUseCase(
+                usuarioRepository, autorizacion);
+        registrarCheckInUseCase = new RegistrarCheckInUseCase(
+                visitaRepository, autorizacion, validadorVisita);
+        registrarCheckOutUseCase = new RegistrarCheckOutUseCase(
+                visitaRepository, autorizacion, validadorVisita);
+        regularizarSalidaOlvidadaUseCase = new RegularizarSalidaOlvidadaUseCase(
+                visitaRepository, autorizacion, validadorVisita);
     }
 
     public ServicioAutenticacion getServicioAutenticacion() {
@@ -191,5 +244,45 @@ public final class ConfiguracionAplicacion {
 
     public CambiarEstadoAccesoUseCase getCambiarEstadoAccesoUseCase() {
         return cambiarEstadoAccesoUseCase;
+    }
+
+    public PrerregistrarVisitaUseCase getPrerregistrarVisitaUseCase() {
+        return prerregistrarVisitaUseCase;
+    }
+
+    public SolicitarVisitaNoAnunciadaUseCase getSolicitarVisitaNoAnunciadaUseCase() {
+        return solicitarVisitaNoAnunciadaUseCase;
+    }
+
+    public SolicitarPaseTemporalUseCase getSolicitarPaseTemporalUseCase() {
+        return solicitarPaseTemporalUseCase;
+    }
+
+    public ResponderSolicitudVisitaUseCase getResponderSolicitudVisitaUseCase() {
+        return responderSolicitudVisitaUseCase;
+    }
+
+    public ConsultarVisitasUseCase getConsultarVisitasUseCase() {
+        return consultarVisitasUseCase;
+    }
+
+    public ConsultarHistorialVisitasUseCase getConsultarHistorialVisitasUseCase() {
+        return consultarHistorialVisitasUseCase;
+    }
+
+    public ConsultarAnfitrionesUseCase getConsultarAnfitrionesUseCase() {
+        return consultarAnfitrionesUseCase;
+    }
+
+    public RegistrarCheckInUseCase getRegistrarCheckInUseCase() {
+        return registrarCheckInUseCase;
+    }
+
+    public RegistrarCheckOutUseCase getRegistrarCheckOutUseCase() {
+        return registrarCheckOutUseCase;
+    }
+
+    public RegularizarSalidaOlvidadaUseCase getRegularizarSalidaOlvidadaUseCase() {
+        return regularizarSalidaOlvidadaUseCase;
     }
 }
