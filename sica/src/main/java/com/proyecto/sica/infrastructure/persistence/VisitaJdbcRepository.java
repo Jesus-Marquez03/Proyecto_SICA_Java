@@ -189,10 +189,12 @@ public final class VisitaJdbcRepository implements VisitaRepository {
                 "No fue posible registrar el ingreso", conexion -> {
                     long personaId;
                     String tipo;
-                    LocalDateTime vencimiento;
+                    boolean paseVencido;
                     try (PreparedStatement bloqueo = conexion.prepareStatement(
                             "SELECT visitante_persona_id,estado_visita_id,tipo_solicitud,"
-                                    + "fecha_vencimiento_pase,fecha_ingreso "
+                                    + "fecha_vencimiento_pase,fecha_ingreso,"
+                                    + "(fecha_vencimiento_pase IS NULL OR "
+                                    + "fecha_vencimiento_pase<CURRENT_TIMESTAMP) AS pase_vencido "
                                     + "FROM visitas WHERE id=? FOR UPDATE")) {
                         bloqueo.setLong(1, visitaId);
                         try (ResultSet fila = bloqueo.executeQuery()) {
@@ -204,12 +206,11 @@ public final class VisitaJdbcRepository implements VisitaRepository {
                             }
                             personaId = fila.getLong("visitante_persona_id");
                             tipo = fila.getString("tipo_solicitud");
-                            vencimiento = obtenerFecha(fila, "fecha_vencimiento_pase");
+                            paseVencido = fila.getBoolean("pase_vencido");
                         }
                     }
                     bloquearPersona(conexion, personaId);
-                    if ("PASE_TEMPORAL".equals(tipo)
-                            && (vencimiento == null || vencimiento.isBefore(LocalDateTime.now()))) {
+                    if ("PASE_TEMPORAL".equals(tipo) && paseVencido) {
                         throw new ConflictoPersistenciaException("El pase temporal esta vencido");
                     }
                     Long anteriorId = buscarVisitaAbierta(conexion, personaId,
@@ -289,10 +290,18 @@ public final class VisitaJdbcRepository implements VisitaRepository {
 
     private void bloquearPersona(Connection conexion, long personaId) throws SQLException {
         try (PreparedStatement sentencia = conexion.prepareStatement(
-                "SELECT id FROM personas WHERE id=? FOR UPDATE")) {
+                "SELECT p.activa,ea.codigo FROM personas p "
+                        + "JOIN persona_estados_acceso ea ON ea.id=p.estado_acceso_id "
+                        + "WHERE p.id=? FOR UPDATE")) {
             sentencia.setLong(1, personaId);
             try (ResultSet fila = sentencia.executeQuery()) {
                 if (!fila.next()) throw new ConflictoPersistenciaException("La persona no existe");
+                String estado = fila.getString("codigo");
+                if (!fila.getBoolean("activa") || "PROHIBICION_INGRESO".equals(estado)
+                        || "BLOQUEADO".equals(estado)) {
+                    throw new ConflictoPersistenciaException(
+                            "La persona esta inactiva o tiene prohibicion de ingreso");
+                }
             }
         }
     }

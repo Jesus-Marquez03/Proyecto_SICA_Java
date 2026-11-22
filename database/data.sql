@@ -45,7 +45,10 @@ INSERT INTO permisos (id, codigo, nombre, descripcion) VALUES
     (30, 'REGISTRAR_CHECK_IN', 'Registrar check-in', 'Confirmar el ingreso fisico autorizado.'),
     (31, 'REGISTRAR_CHECK_OUT', 'Registrar check-out', 'Confirmar la salida fisica.'),
     (32, 'REGULARIZAR_SALIDA_OLVIDADA', 'Regularizar salida olvidada', 'Cerrar visitas abiertas con justificacion.'),
-    (33, 'CONSULTAR_HISTORIAL_VISITAS', 'Consultar historial de visitas', 'Consultar entradas, salidas y regularizaciones.')
+    (33, 'CONSULTAR_HISTORIAL_VISITAS', 'Consultar historial de visitas', 'Consultar entradas, salidas y regularizaciones.'),
+    (34, 'REGISTRAR_INCIDENTE', 'Registrar incidente', 'Registrar acontecimientos de seguridad.'),
+    (35, 'CONSULTAR_INCIDENTE', 'Consultar incidente', 'Consultar incidentes autorizados.'),
+    (36, 'ACTUALIZAR_INCIDENTE', 'Actualizar incidente', 'Dar seguimiento justificado a incidentes.')
 ON DUPLICATE KEY UPDATE
     codigo = VALUES(codigo),
     nombre = VALUES(nombre),
@@ -70,6 +73,12 @@ SELECT 2, id FROM permisos WHERE codigo IN (
     'CONSULTAR_HISTORIAL_VISITAS'
 );
 
+INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
+SELECT 2, id FROM permisos WHERE codigo IN (
+    'REGISTRAR_INCIDENTE', 'CONSULTAR_INCIDENTE', 'ACTUALIZAR_INCIDENTE',
+    'CONSULTAR_AUDITORIA'
+);
+
 -- El guarda atiende el control diario de acceso.
 INSERT IGNORE INTO rol_permisos (rol_id, permiso_id) VALUES
     (3, 4), (3, 5), (3, 6), (3, 8), (3, 9), (3, 11),
@@ -80,6 +89,11 @@ SELECT 3, id FROM permisos WHERE codigo IN (
     'SOLICITAR_INGRESO', 'CONSULTAR_VISITA', 'REGISTRAR_CHECK_IN',
     'REGISTRAR_CHECK_OUT', 'REGULARIZAR_SALIDA_OLVIDADA',
     'CONSULTAR_HISTORIAL_VISITAS'
+);
+
+INSERT IGNORE INTO rol_permisos (rol_id, permiso_id)
+SELECT 3, id FROM permisos WHERE codigo IN (
+    'REGISTRAR_INCIDENTE', 'CONSULTAR_INCIDENTE'
 );
 
 -- El funcionario gestiona y consulta las solicitudes de su empresa.

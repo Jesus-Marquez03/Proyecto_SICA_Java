@@ -9,6 +9,8 @@ import com.proyecto.sica.infrastructure.ui.controller.EmpresaController;
 import com.proyecto.sica.infrastructure.ui.controller.EstadoAccesoController;
 import com.proyecto.sica.infrastructure.ui.controller.PersonaController;
 import com.proyecto.sica.infrastructure.ui.controller.VisitasController;
+import com.proyecto.sica.infrastructure.ui.controller.IncidentesController;
+import com.proyecto.sica.infrastructure.ui.controller.AuditoriaController;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -62,6 +64,8 @@ public final class SicaApplication extends Application {
         PersonaView personaView = new PersonaView();
         EstadoAccesoView estadoView = new EstadoAccesoView();
         VisitasView visitasView = new VisitasView();
+        IncidentesView incidentesView = new IncidentesView();
+        AuditoriaView auditoriaView = new AuditoriaView();
         EmpresaController empresaController = new EmpresaController(empresaView, usuario,
                 configuracion.getCrearEmpresaUseCase(),
                 configuracion.getActualizarEmpresaUseCase(),
@@ -89,6 +93,14 @@ public final class SicaApplication extends Application {
                 configuracion.getRegistrarCheckInUseCase(),
                 configuracion.getRegistrarCheckOutUseCase(),
                 configuracion.getRegularizarSalidaOlvidadaUseCase());
+        IncidentesController incidentesController = new IncidentesController(
+                incidentesView, usuario, configuracion.getCrearIncidenteUseCase(),
+                configuracion.getConsultarIncidentesUseCase(),
+                configuracion.getActualizarIncidenteUseCase(),
+                configuracion.getConsultarEstadosAccesoUseCase(),
+                configuracion.getCambiarEstadoAccesoUseCase());
+        AuditoriaController auditoriaController = new AuditoriaController(
+                auditoriaView, usuario, configuracion.getConsultarAuditoriaUseCase());
 
         final DashboardView[] referencia = new DashboardView[1];
         DashboardView dashboard = new DashboardView(usuario, this::cerrarSesion,
@@ -107,6 +119,14 @@ public final class SicaApplication extends Application {
                 () -> {
                     referencia[0].mostrarContenido(visitasView.getRoot());
                     visitasController.cargar();
+                },
+                () -> {
+                    referencia[0].mostrarContenido(incidentesView.getRoot());
+                    incidentesController.cargar();
+                },
+                () -> {
+                    referencia[0].mostrarContenido(auditoriaView.getRoot());
+                    auditoriaController.cargar();
                 });
         referencia[0] = dashboard;
         visitasController.cargar();

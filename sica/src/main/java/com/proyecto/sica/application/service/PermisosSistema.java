@@ -28,6 +28,10 @@ public final class PermisosSistema {
     public static final String REGISTRAR_CHECK_OUT = "REGISTRAR_CHECK_OUT";
     public static final String REGULARIZAR_SALIDA_OLVIDADA = "REGULARIZAR_SALIDA_OLVIDADA";
     public static final String CONSULTAR_HISTORIAL_VISITAS = "CONSULTAR_HISTORIAL_VISITAS";
+    public static final String REGISTRAR_INCIDENTE = "REGISTRAR_INCIDENTE";
+    public static final String CONSULTAR_INCIDENTE = "CONSULTAR_INCIDENTE";
+    public static final String ACTUALIZAR_INCIDENTE = "ACTUALIZAR_INCIDENTE";
+    public static final String CONSULTAR_AUDITORIA = "CONSULTAR_AUDITORIA";
 
     private PermisosSistema() {
     }

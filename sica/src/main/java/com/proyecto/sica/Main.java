@@ -59,6 +59,8 @@ public final class Main {
                     .forEach(System.out::println);
             configuracion.getInicializadorVisitasDemo().ejecutar()
                     .forEach(System.out::println);
+            configuracion.getInicializadorIncidentesDemo().ejecutar()
+                    .forEach(System.out::println);
         } catch (RuntimeException excepcion) {
             System.err.println("No fue posible inicializar usuarios demo: " + excepcion.getMessage());
             System.exit(1);
