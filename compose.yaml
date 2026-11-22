@@ -19,6 +19,7 @@ services:
       - ./database/migrations/003_personas_empresas.sql:/docker-entrypoint-initdb.d/04-personas-empresas.sql:ro
       - ./database/migrations/004_control_visitas.sql:/docker-entrypoint-initdb.d/05-control-visitas.sql:ro
       - ./database/migrations/005_incidentes_auditoria.sql:/docker-entrypoint-initdb.d/06-incidentes-auditoria.sql:ro
+      - ./database/migrations/006_reportes_dashboard.sql:/docker-entrypoint-initdb.d/07-reportes-dashboard.sql:ro
     healthcheck:
       test:
         - CMD-SHELL
