@@ -32,6 +32,7 @@ public final class PermisosSistema {
     public static final String CONSULTAR_INCIDENTE = "CONSULTAR_INCIDENTE";
     public static final String ACTUALIZAR_INCIDENTE = "ACTUALIZAR_INCIDENTE";
     public static final String CONSULTAR_AUDITORIA = "CONSULTAR_AUDITORIA";
+    public static final String GENERAR_REPORTES = "GENERAR_REPORTES";
 
     private PermisosSistema() {
     }
