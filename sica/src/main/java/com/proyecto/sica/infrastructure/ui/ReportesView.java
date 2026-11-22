@@ -111,7 +111,8 @@ public final class ReportesView {
         categoria.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().categoria()));
         TableColumn<ConteoCategoria, Long> cantidad = new TableColumn<>("Cantidad");
         cantidad.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().cantidad()));
-        tabla.getColumns().addAll(categoria, cantidad);
+        tabla.getColumns().add(categoria);
+        tabla.getColumns().add(cantidad);
     }
 
     private Tab tab(String titulo, javafx.scene.Node contenido) {
@@ -136,7 +137,7 @@ public final class ReportesView {
         for (DatoSerieFecha punto : datos.accesos().ingresosPorDia()) {
             serie.getData().add(new XYChart.Data<>(punto.fecha().format(formato), punto.valor()));
         }
-        grafica.setData(FXCollections.observableArrayList(serie));
+        grafica.setData(FXCollections.observableArrayList(java.util.List.of(serie)));
         tablaDentro.setItems(FXCollections.observableArrayList(datos.personasDentro()));
         tablaEstados.setItems(FXCollections.observableArrayList(datos.visitas().estados()));
         tablaGravedad.setItems(FXCollections.observableArrayList(datos.incidentes().porGravedad()));

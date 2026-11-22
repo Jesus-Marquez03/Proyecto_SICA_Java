@@ -127,7 +127,7 @@ public final class DashboardInicioView {
         for (DatoSerieFecha dato : datos.accesosUltimosSieteDias()) {
             serie.getData().add(new XYChart.Data<>(dato.fecha().format(formato), dato.valor()));
         }
-        grafica.setData(FXCollections.observableArrayList(serie));
+        grafica.setData(FXCollections.observableArrayList(java.util.List.of(serie)));
         if (datos.tieneProgreso()) {
             progreso.setProgress(datos.progresoFinalizadas() / 100.0);
             porcentaje.setText(String.format("%.0f%% completado", datos.progresoFinalizadas()));
