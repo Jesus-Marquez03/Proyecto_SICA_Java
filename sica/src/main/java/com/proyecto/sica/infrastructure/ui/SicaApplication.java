@@ -2,50 +2,53 @@ package com.proyecto.sica.infrastructure.ui;
 
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
 import com.proyecto.sica.application.service.AutenticacionException;
+import com.proyecto.sica.application.service.PermisosSistema;
 import com.proyecto.sica.application.service.ServicioAutenticacion;
 import com.proyecto.sica.config.ConfiguracionAplicacion;
 import com.proyecto.sica.domain.entity.Usuario;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
+import com.proyecto.sica.infrastructure.ui.controller.AuditoriaController;
+import com.proyecto.sica.infrastructure.ui.controller.DashboardController;
 import com.proyecto.sica.infrastructure.ui.controller.EmpresaController;
 import com.proyecto.sica.infrastructure.ui.controller.EstadoAccesoController;
-import com.proyecto.sica.infrastructure.ui.controller.PersonaController;
-import com.proyecto.sica.infrastructure.ui.controller.VisitasController;
 import com.proyecto.sica.infrastructure.ui.controller.IncidentesController;
-import com.proyecto.sica.infrastructure.ui.controller.AuditoriaController;
+import com.proyecto.sica.infrastructure.ui.controller.PersonaController;
+import com.proyecto.sica.infrastructure.ui.controller.ReportesController;
+import com.proyecto.sica.infrastructure.ui.controller.UsuariosController;
+import com.proyecto.sica.infrastructure.ui.controller.VisitasController;
 import javafx.application.Application;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-/**
- * Aplicacion JavaFX que coordina las vistas con los servicios de aplicacion.
- */
+/** Punto de composicion JavaFX y navegacion entre controladores MVC. */
 public final class SicaApplication extends Application {
-
     private Stage stage;
     private ServicioAutenticacion autenticacion;
     private ConfiguracionAplicacion configuracion;
     private LoginView loginView;
     private VisitasController visitasController;
+    private AnimacionBiometricaView biometricaView;
+    private DashboardView dashboardView;
 
-    public static void iniciar(String... args) {
-        launch(args);
-    }
+    public static void iniciar(String... args) { launch(args); }
 
     @Override
     public void start(Stage stagePrincipal) {
-        this.stage = stagePrincipal;
+        stage = stagePrincipal;
         configuracion = new ConfiguracionAplicacion();
-        this.autenticacion = configuracion.getServicioAutenticacion();
-
-        stage.setTitle("SICA - Control de acceso");
-        stage.setMinWidth(760);
-        stage.setMinHeight(520);
+        autenticacion = configuracion.getServicioAutenticacion();
+        stage.setTitle("SICA Zona Acme");
+        stage.setMinWidth(1050);
+        stage.setMinHeight(680);
         mostrarLogin();
         stage.show();
     }
 
     private void mostrarLogin() {
+        detenerVistasActivas();
         loginView = new LoginView(this::autenticar);
-        aplicarEscena(new Scene(loginView.getRoot(), 900, 600));
+        aplicarEscena(new Scene(loginView.getRoot(), 1100, 720));
     }
 
     private void autenticar(String correo, char[] password) {
@@ -60,19 +63,24 @@ public final class SicaApplication extends Application {
     }
 
     private void mostrarDashboard(Usuario usuario) {
+        DashboardInicioView inicioView = new DashboardInicioView();
         EmpresaView empresaView = new EmpresaView();
         PersonaView personaView = new PersonaView();
         EstadoAccesoView estadoView = new EstadoAccesoView();
         VisitasView visitasView = new VisitasView();
         IncidentesView incidentesView = new IncidentesView();
+        ReportesView reportesView = new ReportesView();
+        UsuariosView usuariosView = new UsuariosView();
         AuditoriaView auditoriaView = new AuditoriaView();
+        biometricaView = new AnimacionBiometricaView();
+
+        DashboardController inicioController = new DashboardController(inicioView, usuario,
+                configuracion.getConsultarResumenDashboardUseCase());
         EmpresaController empresaController = new EmpresaController(empresaView, usuario,
-                configuracion.getCrearEmpresaUseCase(),
-                configuracion.getActualizarEmpresaUseCase(),
+                configuracion.getCrearEmpresaUseCase(), configuracion.getActualizarEmpresaUseCase(),
                 configuracion.getConsultarEmpresasUseCase());
         PersonaController personaController = new PersonaController(personaView, usuario,
-                configuracion.getCrearPersonaUseCase(),
-                configuracion.getActualizarPersonaUseCase(),
+                configuracion.getCrearPersonaUseCase(), configuracion.getActualizarPersonaUseCase(),
                 configuracion.getConsultarPersonasUseCase(),
                 configuracion.getBuscarPersonaPorDocumentoUseCase(),
                 configuracion.getConsultarEmpresasUseCase());
@@ -93,48 +101,101 @@ public final class SicaApplication extends Application {
                 configuracion.getRegistrarCheckInUseCase(),
                 configuracion.getRegistrarCheckOutUseCase(),
                 configuracion.getRegularizarSalidaOlvidadaUseCase());
-        IncidentesController incidentesController = new IncidentesController(
-                incidentesView, usuario, configuracion.getCrearIncidenteUseCase(),
+        IncidentesController incidentesController = new IncidentesController(incidentesView,
+                usuario, configuracion.getCrearIncidenteUseCase(),
                 configuracion.getConsultarIncidentesUseCase(),
                 configuracion.getActualizarIncidenteUseCase(),
                 configuracion.getConsultarEstadosAccesoUseCase(),
                 configuracion.getCambiarEstadoAccesoUseCase());
-        AuditoriaController auditoriaController = new AuditoriaController(
-                auditoriaView, usuario, configuracion.getConsultarAuditoriaUseCase());
+        ReportesController reportesController = new ReportesController(reportesView, usuario,
+                configuracion.getConsultarReportesUseCase());
+        UsuariosController usuariosController = new UsuariosController(usuariosView, usuario,
+                configuracion.getCrearUsuarioUseCase(), configuracion.getActualizarUsuarioUseCase(),
+                configuracion.getCambiarEstadoUsuarioUseCase(),
+                configuracion.getConsultarUsuariosUseCase(), configuracion.getConsultarRolesUseCase(),
+                configuracion.getConsultarEmpresasUseCase());
+        AuditoriaController auditoriaController = new AuditoriaController(auditoriaView, usuario,
+                configuracion.getConsultarAuditoriaUseCase());
 
-        final DashboardView[] referencia = new DashboardView[1];
-        DashboardView dashboard = new DashboardView(usuario, this::cerrarSesion,
-                () -> {
-                    referencia[0].mostrarContenido(empresaView.getRoot());
-                    empresaController.cargar();
-                },
-                () -> {
-                    referencia[0].mostrarContenido(personaView.getRoot());
-                    personaController.cargar();
-                },
-                () -> {
-                    referencia[0].mostrarContenido(estadoView.getRoot());
-                    estadoController.cargar();
-                },
-                () -> {
-                    referencia[0].mostrarContenido(visitasView.getRoot());
+        boolean puedeEstados = tiene(usuario, PermisosSistema.CONSULTAR_PERSONA);
+        visitasView.integrarEstadosAcceso(estadoView.getRoot(), puedeEstados);
+        dashboardView = new DashboardView(usuario, this::cerrarSesion);
+        registrarNavegacion(usuario, inicioView, inicioController, empresaView, empresaController,
+                personaView, personaController, visitasView, estadoController, incidentesView,
+                incidentesController, reportesView, reportesController, usuariosView,
+                usuariosController, auditoriaView, auditoriaController);
+
+        dashboardView.activar("Dashboard");
+        abrir(inicioView.getRoot(), inicioController::cargar);
+        aplicarEscena(new Scene(dashboardView.getRoot(), 1366, 820));
+    }
+
+    private void registrarNavegacion(Usuario usuario, DashboardInicioView inicioView,
+            DashboardController inicioController, EmpresaView empresaView,
+            EmpresaController empresaController, PersonaView personaView,
+            PersonaController personaController, VisitasView visitasView,
+            EstadoAccesoController estadoController, IncidentesView incidentesView,
+            IncidentesController incidentesController, ReportesView reportesView,
+            ReportesController reportesController, UsuariosView usuariosView,
+            UsuariosController usuariosController, AuditoriaView auditoriaView,
+            AuditoriaController auditoriaController) {
+        boolean consultarVisita = tiene(usuario, PermisosSistema.CONSULTAR_VISITA);
+        boolean control = tieneAlguno(usuario, PermisosSistema.REGISTRAR_CHECK_IN,
+                PermisosSistema.REGISTRAR_CHECK_OUT, PermisosSistema.SOLICITAR_INGRESO,
+                PermisosSistema.CAMBIAR_ESTADO_ACCESO);
+        dashboardView.registrarOpcion("Dashboard", TipoIcono.DASHBOARD, consultarVisita,
+                () -> abrir(inicioView.getRoot(), inicioController::cargar));
+        dashboardView.registrarOpcion("Control de acceso", TipoIcono.CONTROL_ACCESO, control,
+                () -> abrir(visitasView.getRoot(), () -> {
+                    visitasView.mostrarPanelControl();
                     visitasController.cargar();
-                },
-                () -> {
-                    referencia[0].mostrarContenido(incidentesView.getRoot());
-                    incidentesController.cargar();
-                },
-                () -> {
-                    referencia[0].mostrarContenido(auditoriaView.getRoot());
-                    auditoriaController.cargar();
-                });
-        referencia[0] = dashboard;
-        visitasController.cargar();
-        aplicarEscena(new Scene(dashboard.getRoot(), 1180, 720));
+                    if (tiene(usuario, PermisosSistema.CONSULTAR_PERSONA)) estadoController.cargar();
+                }));
+        dashboardView.registrarOpcion("Visitas", TipoIcono.VISITAS, consultarVisita,
+                () -> abrir(visitasView.getRoot(), () -> {
+                    visitasView.mostrarPanelVisitas();
+                    visitasController.cargar();
+                }));
+        dashboardView.registrarOpcion("Personas", TipoIcono.PERSONAS,
+                tiene(usuario, PermisosSistema.CONSULTAR_PERSONA),
+                () -> abrir(personaView.getRoot(), personaController::cargar));
+        dashboardView.registrarOpcion("Empresas", TipoIcono.EMPRESAS,
+                tiene(usuario, PermisosSistema.CONSULTAR_EMPRESA),
+                () -> abrir(empresaView.getRoot(), empresaController::cargar));
+        dashboardView.registrarOpcion("Incidentes", TipoIcono.INCIDENTES,
+                tiene(usuario, PermisosSistema.CONSULTAR_INCIDENTE),
+                () -> abrir(incidentesView.getRoot(), incidentesController::cargar));
+        dashboardView.registrarOpcion("Reportes", TipoIcono.REPORTES,
+                tiene(usuario, PermisosSistema.GENERAR_REPORTES)
+                        && tiene(usuario, PermisosSistema.CONSULTAR_INCIDENTE),
+                () -> abrir(reportesView.getRoot(), reportesController::cargar));
+        dashboardView.registrarOpcion("Usuarios y roles", TipoIcono.USUARIOS,
+                tiene(usuario, PermisosSistema.CONSULTAR_USUARIO),
+                () -> abrir(usuariosView.getRoot(), usuariosController::cargar));
+        dashboardView.registrarOpcion("Bitacora", TipoIcono.BITACORA,
+                tiene(usuario, PermisosSistema.CONSULTAR_AUDITORIA),
+                () -> abrir(auditoriaView.getRoot(), auditoriaController::cargar));
+        dashboardView.registrarOpcion("Animacion biometrica", TipoIcono.BIOMETRIA, true,
+                () -> abrir(biometricaView.getRoot(), () -> { }));
+    }
+
+    private void abrir(Parent contenido, Runnable alAbrir) {
+        if (biometricaView != null && contenido != biometricaView.getRoot()) biometricaView.detener();
+        dashboardView.mostrarContenido(contenido);
+        alAbrir.run();
+    }
+
+    private boolean tiene(Usuario usuario, String permiso) {
+        return usuario.getRol().tienePermiso(permiso);
+    }
+
+    private boolean tieneAlguno(Usuario usuario, String... permisos) {
+        for (String permiso : permisos) if (tiene(usuario, permiso)) return true;
+        return false;
     }
 
     private void cerrarSesion() {
-        cerrarPollingVisitas();
+        detenerVistasActivas();
         autenticacion.cerrarSesion();
         mostrarLogin();
     }
@@ -146,17 +207,13 @@ public final class SicaApplication extends Application {
 
     @Override
     public void stop() {
-        cerrarPollingVisitas();
-        if (autenticacion != null) {
-            autenticacion.cerrarSesion();
-        }
+        detenerVistasActivas();
+        if (autenticacion != null) autenticacion.cerrarSesion();
         AbandonedConnectionCleanupThread.checkedShutdown();
     }
 
-    private void cerrarPollingVisitas() {
-        if (visitasController != null) {
-            visitasController.close();
-            visitasController = null;
-        }
+    private void detenerVistasActivas() {
+        if (visitasController != null) { visitasController.close(); visitasController = null; }
+        if (biometricaView != null) { biometricaView.detener(); biometricaView = null; }
     }
 }

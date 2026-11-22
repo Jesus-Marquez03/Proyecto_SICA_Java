@@ -44,6 +44,9 @@ import com.proyecto.sica.application.usecase.ActualizarIncidenteUseCase;
 import com.proyecto.sica.application.usecase.ConsultarAuditoriaUseCase;
 import com.proyecto.sica.application.usecase.ConsultarIncidentePorIdUseCase;
 import com.proyecto.sica.application.usecase.ConsultarIncidentesUseCase;
+import com.proyecto.sica.application.usecase.ConsultarReportesUseCase;
+import com.proyecto.sica.application.usecase.ConsultarResumenDashboardUseCase;
+import com.proyecto.sica.application.usecase.ConsultarRolesUseCase;
 import com.proyecto.sica.application.usecase.CrearIncidenteUseCase;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import com.proyecto.sica.infrastructure.persistence.AuditoriaJdbcRepository;
@@ -56,6 +59,7 @@ import com.proyecto.sica.infrastructure.persistence.RolJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.UsuarioJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.VisitaJdbcRepository;
 import com.proyecto.sica.infrastructure.persistence.IncidenteJdbcRepository;
+import com.proyecto.sica.infrastructure.persistence.ReporteJdbcRepository;
 
 /**
  * Ensambla manualmente los adaptadores y casos de uso, sin framework externo.
@@ -98,6 +102,9 @@ public final class ConfiguracionAplicacion {
     private final ConsultarIncidentePorIdUseCase consultarIncidentePorIdUseCase;
     private final ActualizarIncidenteUseCase actualizarIncidenteUseCase;
     private final ConsultarAuditoriaUseCase consultarAuditoriaUseCase;
+    private final ConsultarReportesUseCase consultarReportesUseCase;
+    private final ConsultarResumenDashboardUseCase consultarResumenDashboardUseCase;
+    private final ConsultarRolesUseCase consultarRolesUseCase;
 
     public ConfiguracionAplicacion() {
         ConnectionFactory connectionFactory = new ConnectionFactory(ConfiguracionBaseDatos.cargar());
@@ -119,6 +126,7 @@ public final class ConfiguracionAplicacion {
                 connectionFactory, personaRepository, usuarioRepository, transacciones);
         IncidenteJdbcRepository incidenteRepository = new IncidenteJdbcRepository(
                 connectionFactory, visitaRepository, usuarioRepository, transacciones);
+        ReporteJdbcRepository reporteRepository = new ReporteJdbcRepository(connectionFactory);
         inicializadorVisitasDemo = new InicializadorVisitasDemo(visitaRepository,
                 estadoVisitaRepository, personaRepository, usuarioRepository);
         inicializadorIncidentesDemo = new InicializadorIncidentesDemo(incidenteRepository,
@@ -206,6 +214,11 @@ public final class ConfiguracionAplicacion {
                 incidenteRepository, autorizacion, validadorIncidente);
         consultarAuditoriaUseCase = new ConsultarAuditoriaUseCase(
                 auditoriaRepository, autorizacion);
+        consultarReportesUseCase = new ConsultarReportesUseCase(
+                reporteRepository, autorizacion);
+        consultarResumenDashboardUseCase = new ConsultarResumenDashboardUseCase(
+                reporteRepository, autorizacion);
+        consultarRolesUseCase = new ConsultarRolesUseCase(rolRepository, autorizacion);
     }
 
     public ServicioAutenticacion getServicioAutenticacion() {
@@ -344,5 +357,17 @@ public final class ConfiguracionAplicacion {
 
     public ConsultarAuditoriaUseCase getConsultarAuditoriaUseCase() {
         return consultarAuditoriaUseCase;
+    }
+
+    public ConsultarReportesUseCase getConsultarReportesUseCase() {
+        return consultarReportesUseCase;
+    }
+
+    public ConsultarResumenDashboardUseCase getConsultarResumenDashboardUseCase() {
+        return consultarResumenDashboardUseCase;
+    }
+
+    public ConsultarRolesUseCase getConsultarRolesUseCase() {
+        return consultarRolesUseCase;
     }
 }

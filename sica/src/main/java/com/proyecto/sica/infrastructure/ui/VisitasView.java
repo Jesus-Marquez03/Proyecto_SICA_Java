@@ -40,6 +40,8 @@ public final class VisitasView {
     private final Tab guardaTab = new Tab("Panel del guarda");
     private final Tab funcionarioTab = new Tab("Panel del funcionario");
     private final Tab historialTab = new Tab("Historial");
+    private final Tab estadosTab = new Tab("Estados de acceso");
+    private final TabPane tabs = new TabPane();
     private final TableView<Visita> visitasTable = crearTabla();
     private final TableView<Visita> pendientesTable = crearTabla();
     private final TableView<Visita> historialTable = crearTabla();
@@ -90,7 +92,7 @@ public final class VisitasView {
         guardaTab.setClosable(false);
         funcionarioTab.setClosable(false);
         historialTab.setClosable(false);
-        TabPane tabs = new TabPane(guardaTab, funcionarioTab, historialTab);
+        tabs.getTabs().addAll(guardaTab, funcionarioTab, historialTab);
         root.setTop(cabecera);
         root.setCenter(tabs);
     }
@@ -234,6 +236,25 @@ public final class VisitasView {
         guardaTab.setDisable(!guarda);
         funcionarioTab.setDisable(!funcionario);
         historialTab.setDisable(!historial);
+    }
+
+    /** Integra la gestion ya existente sin agregar otra opcion al menu final. */
+    public void integrarEstadosAcceso(Parent contenido, boolean permitido) {
+        estadosTab.setContent(contenido);
+        estadosTab.setClosable(false);
+        estadosTab.setDisable(!permitido);
+        if (!tabs.getTabs().contains(estadosTab)) tabs.getTabs().add(estadosTab);
+    }
+
+    public void mostrarPanelControl() {
+        if (!guardaTab.isDisable()) tabs.getSelectionModel().select(guardaTab);
+        else if (!estadosTab.isDisable()) tabs.getSelectionModel().select(estadosTab);
+    }
+
+    public void mostrarPanelVisitas() {
+        if (!funcionarioTab.isDisable()) tabs.getSelectionModel().select(funcionarioTab);
+        else if (!historialTab.isDisable()) tabs.getSelectionModel().select(historialTab);
+        else tabs.getSelectionModel().select(guardaTab);
     }
 
     private Runnable onBuscarPersona = () -> { };

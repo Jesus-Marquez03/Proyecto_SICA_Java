@@ -147,6 +147,10 @@ CREATE TABLE IF NOT EXISTS visitas (
     INDEX idx_visitas_anfitrion (anfitrion_usuario_id),
     INDEX idx_visitas_estado_fecha (estado_visita_id, fecha_programada),
     INDEX idx_visitas_tipo_solicitud (tipo_solicitud),
+    INDEX idx_visitas_fecha_solicitud (fecha_solicitud),
+    INDEX idx_visitas_fecha_ingreso (fecha_ingreso),
+    INDEX idx_visitas_fecha_salida (fecha_salida),
+    INDEX idx_visitas_fecha_cierre_sistema (fecha_cierre_sistema),
     CONSTRAINT chk_visitas_tipo_solicitud
         CHECK (tipo_solicitud IN ('PRERREGISTRADA', 'NO_ANUNCIADA', 'PASE_TEMPORAL')),
     CONSTRAINT chk_visitas_respuesta
