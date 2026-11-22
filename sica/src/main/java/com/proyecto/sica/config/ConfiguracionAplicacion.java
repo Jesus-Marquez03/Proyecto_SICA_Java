@@ -46,6 +46,7 @@ import com.proyecto.sica.application.usecase.ConsultarIncidentePorIdUseCase;
 import com.proyecto.sica.application.usecase.ConsultarIncidentesUseCase;
 import com.proyecto.sica.application.usecase.ConsultarReportesUseCase;
 import com.proyecto.sica.application.usecase.ConsultarResumenDashboardUseCase;
+import com.proyecto.sica.application.usecase.ConsultarRolesUseCase;
 import com.proyecto.sica.application.usecase.CrearIncidenteUseCase;
 import com.proyecto.sica.infrastructure.database.ConnectionFactory;
 import com.proyecto.sica.infrastructure.persistence.AuditoriaJdbcRepository;
@@ -103,6 +104,7 @@ public final class ConfiguracionAplicacion {
     private final ConsultarAuditoriaUseCase consultarAuditoriaUseCase;
     private final ConsultarReportesUseCase consultarReportesUseCase;
     private final ConsultarResumenDashboardUseCase consultarResumenDashboardUseCase;
+    private final ConsultarRolesUseCase consultarRolesUseCase;
 
     public ConfiguracionAplicacion() {
         ConnectionFactory connectionFactory = new ConnectionFactory(ConfiguracionBaseDatos.cargar());
@@ -216,6 +218,7 @@ public final class ConfiguracionAplicacion {
                 reporteRepository, autorizacion);
         consultarResumenDashboardUseCase = new ConsultarResumenDashboardUseCase(
                 reporteRepository, autorizacion);
+        consultarRolesUseCase = new ConsultarRolesUseCase(rolRepository, autorizacion);
     }
 
     public ServicioAutenticacion getServicioAutenticacion() {
@@ -362,5 +365,9 @@ public final class ConfiguracionAplicacion {
 
     public ConsultarResumenDashboardUseCase getConsultarResumenDashboardUseCase() {
         return consultarResumenDashboardUseCase;
+    }
+
+    public ConsultarRolesUseCase getConsultarRolesUseCase() {
+        return consultarRolesUseCase;
     }
 }
