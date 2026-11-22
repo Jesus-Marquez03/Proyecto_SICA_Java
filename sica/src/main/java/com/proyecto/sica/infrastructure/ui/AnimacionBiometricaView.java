@@ -9,7 +9,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
-import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -36,6 +35,7 @@ public final class AnimacionBiometricaView {
     private final VBox notificacion = new VBox(3);
     private Timeline secuencia;
     private Timeline escaneo;
+    private Timeline notificacionAnimacion;
 
     public AnimacionBiometricaView() { construir(); }
 
@@ -130,13 +130,20 @@ public final class AnimacionBiometricaView {
         destello.setFromValue(0.55); destello.setToValue(1); destello.play();
         if (exito) {
             notificacion.setVisible(true);
-            FadeTransition entrada = new FadeTransition(Duration.millis(300), notificacion);
-            entrada.setFromValue(0); entrada.setToValue(1); entrada.play();
-            TranslateTransition desplazamiento = new TranslateTransition(
-                    Duration.millis(300), notificacion);
-            desplazamiento.setFromY(130);
-            desplazamiento.setToY(112);
-            desplazamiento.play();
+            notificacionAnimacion = new Timeline(
+                    new KeyFrame(Duration.ZERO,
+                            new KeyValue(notificacion.opacityProperty(), 0),
+                            new KeyValue(notificacion.translateYProperty(), 130)),
+                    new KeyFrame(Duration.millis(300),
+                            new KeyValue(notificacion.opacityProperty(), 1),
+                            new KeyValue(notificacion.translateYProperty(), 112)),
+                    new KeyFrame(Duration.seconds(2.3),
+                            new KeyValue(notificacion.opacityProperty(), 1)),
+                    new KeyFrame(Duration.seconds(2.6),
+                            new KeyValue(notificacion.opacityProperty(), 0),
+                            new KeyValue(notificacion.translateYProperty(), 105)));
+            notificacionAnimacion.setOnFinished(e -> notificacion.setVisible(false));
+            notificacionAnimacion.play();
         }
     }
 
@@ -148,8 +155,10 @@ public final class AnimacionBiometricaView {
     public void detener() {
         if (secuencia != null) secuencia.stop();
         if (escaneo != null) escaneo.stop();
+        if (notificacionAnimacion != null) notificacionAnimacion.stop();
         huella.detener();
         linea.setOpacity(0);
+        notificacion.setVisible(false);
     }
 
     public Parent getRoot() { return root; }
