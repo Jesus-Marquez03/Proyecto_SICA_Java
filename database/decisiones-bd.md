@@ -73,3 +73,11 @@ Los indices `idx_incidentes_visita_fecha`, `idx_incidentes_persona_fecha`, `idx_
 La bitacora es inmutable desde los casos de uso y la interfaz porque solo existe un puerto publico de consulta y no hay acciones de edicion o eliminacion. Sin embargo, el usuario de base de datos conserva permisos propios del entorno Docker; un administrador de MySQL podria modificar la tabla directamente. No se afirma inmutabilidad absoluta.
 
 Durante la revision preventiva se reforzo el check-in: despues de bloquear la fila de la persona, la transaccion vuelve a comprobar `activa` y el estado de acceso. El vencimiento de pases se compara con `CURRENT_TIMESTAMP` de MySQL. Esto cierra una ventana de carrera entre una prohibicion y un ingreso sin cambiar el flujo funcional existente.
+
+## Sexta etapa: reportes y dashboard
+
+No se agregaron tablas ni columnas. Todos los indicadores se derivan de `visitas`, `visita_estados`, `personas`, `usuarios`, `empresas` e `incidentes`. Los rangos usan inicio inclusivo y dia posterior al final como limite exclusivo, de modo que incluyen correctamente todas las horas del ultimo dia.
+
+Se agregaron `idx_visitas_fecha_solicitud`, `idx_visitas_fecha_ingreso`, `idx_visitas_fecha_salida` e `idx_visitas_fecha_cierre_sistema`. Corresponden a filtros reales y evitan recorridos completos al consultar periodos. La migracion `006_reportes.sql` comprueba `information_schema`, puede repetirse y no modifica datos.
+
+El alcance empresarial se obtiene mediante `visitas.anfitrion_usuario_id -> usuarios.empresa_id`, que representa la empresa destino. No se usa `personas.empresa_id` para ese filtro porque un invitado puede no pertenecer a ninguna empresa o trabajar para una distinta. Las regularizaciones se filtran por `fecha_cierre_sistema` independientemente de la fecha en que se creo la visita original.

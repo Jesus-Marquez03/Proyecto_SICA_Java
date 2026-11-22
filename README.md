@@ -1,6 +1,6 @@
 # SICA - Sistema Integrado de Control de Acceso
 
-Proyecto academico en Java para controlar el acceso a Zona Acme. La etapa actual implementa seguridad, empresas, personas, visitas, incidentes, auditoria consultable y pantallas JavaFX. Aun no incluye reportes finales.
+Proyecto academico en Java para controlar el acceso a Zona Acme. La sexta etapa incluye seguridad, empresas, personas, visitas, incidentes, auditoria consultable, reportes reales y una interfaz JavaFX monocromatica con dashboard Bento.
 
 ## Tecnologias
 
@@ -62,9 +62,10 @@ docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /doc
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/04-personas-empresas.sql'
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/05-control-visitas.sql'
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/06-incidentes-auditoria.sql'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/07-reportes.sql'
 ```
 
-Las migraciones son repetibles. La quinta agrega permisos granulares e indices para incidentes y trazabilidad. No borra ni reemplaza registros existentes.
+Las migraciones son repetibles. La sexta agrega cuatro indices de fecha usados por reportes; no crea tablas, borra datos ni reemplaza registros existentes.
 
 Para detener MySQL conservando los datos:
 
@@ -87,7 +88,7 @@ mvn test
 La prueba de integracion con MySQL se ejecuta de forma explicita y requiere el contenedor y las variables anteriores:
 
 ```powershell
-mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT,IncidentesAuditoriaMysqlIT" test
+mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT,IncidentesAuditoriaMysqlIT,ReportesMysqlIT" test
 ```
 
 ## 4. Inicializar usuarios academicos
@@ -115,7 +116,7 @@ Estas contrasenas son publicas y deliberadamente de demostracion. No deben reuti
 mvn javafx:run
 ```
 
-Tambien se puede iniciar `Main` con `--javafx`. El menu lateral incluye Control de visitas, Incidentes y Auditoria. Los botones se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
+Tambien se puede iniciar `Main` con `--javafx`. El menu lateral contiene Dashboard, Control de acceso, Visitas, Personas, Empresas, Incidentes, Reportes, Usuarios y roles, Bitacora y Animacion biometrica. Los elementos se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
 
 La comprobacion JDBC sigue disponible:
 
@@ -144,6 +145,7 @@ Los permisos se consultan desde `roles`, `permisos` y `rol_permisos`. `ServicioA
 - Visitas: `PRERREGISTRAR_VISITA`, `SOLICITAR_INGRESO`, `CONSULTAR_VISITA`, `APROBAR_SOLICITUD`, `RECHAZAR_SOLICITUD`, `REGISTRAR_CHECK_IN`, `REGISTRAR_CHECK_OUT`, `REGULARIZAR_SALIDA_OLVIDADA` y `CONSULTAR_HISTORIAL_VISITAS`.
 - Incidentes: `REGISTRAR_INCIDENTE`, `CONSULTAR_INCIDENTE` y `ACTUALIZAR_INCIDENTE`.
 - Auditoria: se reutiliza `CONSULTAR_AUDITORIA` porque ya existia y expresaba exactamente la operacion.
+- Reportes: `GENERAR_REPORTES`, combinado con los permisos de consulta de los datos mostrados.
 
 Superusuario y Supervisor poseen los permisos del modulo de visitas. El Guarda puede solicitar ingresos y pases, consultar, registrar entradas y salidas y regularizar. El Funcionario puede prerregistrar y responder solamente solicitudes dirigidas a el y de su empresa. Tambien puede consultar personas para seleccionar invitados, pero no administrarlas. Ocultar un boton nunca sustituye la comprobacion del caso de uso.
 
@@ -262,6 +264,53 @@ Para probar:
 
 Datos idempotentes: `DEMO_NOVEDAD`, `DEMO_SUPERVISION` y `DEMO_RESTRICCION`. El ultimo utiliza una visita historica de Bruno Restringido Demo y demuestra que la prohibicion no elimina la visita ni el incidente.
 
+## Reportes y dashboard final
+
+El flujo de lectura es `Vista JavaFX -> Controlador -> Caso de uso -> ReporteRepository -> ReporteJdbcRepository -> MySQL`. Las vistas y controladores no contienen SQL. `ReporteJdbcRepository` usa `COUNT`, `SUM`, `GROUP BY`, rangos semiabiertos de fecha, `JOIN`, `PreparedStatement` y `try-with-resources`; MySQL realiza las agregaciones para evitar descargar tablas completas.
+
+Reportes disponibles:
+
+- **Accesos por periodo:** ingresos fisicos por `fecha_ingreso`, salidas por `fecha_salida`, serie diaria y diferencia entre los dos ultimos dias del filtro. Crear o aprobar una solicitud no cuenta como ingreso.
+- **Personas dentro:** solamente visitas cuyo estado actual es `DENTRO`, con persona, documento, empresa destino, tipo, ingreso y visita asociada.
+- **Estados de visita:** conteo por codigo para solicitudes creadas dentro del periodo seleccionado.
+- **Incidentes:** total, abiertos, en revision, cerrados, gravedad y serie por fecha de ocurrencia.
+- **Trazabilidad:** rechazos y pases por fecha de solicitud; regularizaciones por `fecha_cierre_sistema`; solicitudes pendientes actuales del periodo.
+
+El dashboard consulta accesos de los ultimos siete dias, presencia actual, pendientes, incidentes abiertos y actividad reciente. El progreso mensual se define asi:
+
+```text
+visitas finalizadas = FUERA + CERRADA_POR_SISTEMA
+visitas elegibles = finalizadas + APROBADA + DENTRO + EXPIRADA
+progreso = finalizadas / elegibles * 100
+```
+
+Si no existen visitas elegibles muestra `Sin datos`; nunca divide por cero. La actividad se ordena por la ultima fecha operativa disponible. El permiso `GENERAR_REPORTES` protege la pantalla y `CONSULTAR_INCIDENTE` protege las estadisticas de incidentes. Un rol empresarial, si recibe estos permisos, queda limitado a visitas cuyo anfitrion pertenece a su empresa; no ve totales globales.
+
+## Interfaz JavaFX definitiva
+
+La interfaz conserva MVC y reutiliza los casos de uso anteriores. `DashboardView` es solo el marco de navegacion; `DashboardInicioView`, `ReportesView`, `UsuariosView` y las vistas de negocio mantienen responsabilidades separadas. `EjecutorTareasUi` ejecuta dashboard, reportes y operaciones administrativas fuera del hilo JavaFX. El polling de visitas existente no se duplico y se detiene al cerrar sesion.
+
+Elementos visuales implementados:
+
+- Fondo arquitectonico abstracto construido con formas JavaFX locales, sin imagenes ni licencias externas.
+- Sidebar blanco, contenedor translucido, tarjetas Bento, tarjeta principal negra y superficies grises.
+- Familia central de iconos `SVGPath` para las diez opciones y acciones comunes; no se usan emojis ni PNG escalados.
+- CSS unico para tablas, formularios, botones, tabs, alertas, scroll y estados de seleccion.
+- Contenido desplazable para ventanas intermedias; el diseno base se abre a 1366 x 820 y tiene minimo de 1050 x 680.
+- Administracion de usuarios con listado, alta, edicion, activacion/desactivacion y consulta de roles/permisos existentes. No existe editor de asignaciones porque no hay un caso de uso autorizado.
+
+`Control de acceso` y `Visitas` seleccionan paneles diferentes de la misma vista para no duplicar el modulo. La gestion de estados de acceso se conserva como pestana de Control de acceso. Todas las opciones navegan a contenido real y las operaciones siguen protegidas en aplicacion, no solo en botones.
+
+### Animacion biometrica
+
+`AnimacionBiometricaView` es una demostracion visual, no un mecanismo de autenticacion. La huella esta formada por seis crestas SVG independientes y recorre reposo, deteccion, revelado progresivo, barrido, confirmacion o error. La confirmacion usa check y notificacion flotante con transiciones nativas. No captura, compara, transmite ni almacena datos biometricos y nunca modifica accesos, permisos o sesiones. Las animaciones se detienen al salir de la vista; `-Dsica.movimientoReducido=true` omite la secuencia prolongada.
+
+### Limitaciones visuales conocidas
+
+Las imagenes adjuntas se usaron como referencia para composicion, sidebar e iconos. El video MP4 no pudo decodificarse porque el entorno no dispone de `ffmpeg` ni un decodificador accesible, por lo que sus fotogramas no se afirman como inspeccionados. Ademas, el servicio de captura de ventanas de Windows devolvio `native pipe is unavailable`: se verifico que JavaFX inicia y que no produce advertencias CSS, pero la comparacion visual completa debe hacerse manualmente.
+
+Lista manual recomendada: iniciar con cada rol, recorrer las diez opciones, probar 1366 x 768 y una ventana maximizada, comprobar scroll, tablas, formularios y logout, y ejecutar las simulaciones correcta y de error de la huella.
+
 ## Principios y patrones aplicados
 
 - Responsabilidad unica: hash, autenticacion, autorizacion, validacion, UI y JDBC estan separados.
@@ -275,6 +324,7 @@ Datos idempotentes: `DEMO_NOVEDAD`, `DEMO_SUPERVISION` y `DEMO_RESTRICCION`. El 
 - Fabrica simple: `FabricaVisita` centraliza la construccion valida de cada tipo de solicitud.
 - Polling Observer: el actualizador entrega periodicamente una lista a su callback sin acoplarse a la vista.
 - Read model: `RegistroAuditoria` expone una lectura inmutable separada de `EventoAuditoria`, que representa una escritura nueva.
+- Componentes reutilizables: `IconosSica`, `TarjetaMetrica`, `EncabezadoModulo`, `FondoArquitectonico` y `HuellaBiometrica` concentran solo presentacion compartida.
 
 No se agregaron patrones cuyo uso no fuera necesario.
 
@@ -292,6 +342,7 @@ Se conservan las 11 tablas originales. Los cambios de seguridad son:
 - Siete estados nuevos de visita; `RECHAZADA` se reutiliza porque ya existia.
 - Indices por visita, persona y responsable de incidente, y por entidad/registro de auditoria.
 - Coherencia entre esquema y migraciones: `usuarios.correo` obligatorio y `empresas.correo` opcional.
+- Indices de fecha para solicitud, ingreso, salida y cierre por sistema, usados por los reportes de la sexta etapa.
 
 Los detalles se encuentran en `database/decisiones-bd.md`.
 
@@ -299,4 +350,4 @@ Los detalles se encuentran en `database/decisiones-bd.md`.
 
 - `main`: entrega estable; no se modifica durante esta etapa.
 - `develop`: integracion.
-- `feature/auditoria-incidentes`: desarrollo de la quinta etapa.
+- `feature/reportes-interfaz-final`: desarrollo de la sexta etapa.
