@@ -1,6 +1,6 @@
 # SICA - Sistema Integrado de Control de Acceso
 
-Proyecto academico en Java para controlar el acceso a Zona Acme. La etapa actual implementa seguridad, empresas, personas, control de visitas, aprobaciones, pases temporales, entradas, salidas, regularizaciones, auditoria y pantallas JavaFX. Aun no incluye el modulo completo de incidentes ni reportes finales.
+Proyecto academico en Java para controlar el acceso a Zona Acme. La etapa actual implementa seguridad, empresas, personas, visitas, incidentes, auditoria consultable y pantallas JavaFX. Aun no incluye reportes finales.
 
 ## Tecnologias
 
@@ -17,10 +17,10 @@ No se utiliza Spring Boot, Hibernate, JPA, Lombok, FXML ni librerias visuales ex
 
 El paquete base es `com.proyecto.sica`:
 
-- `domain/entity`: usuarios, empresas, personas, visitas y sus estados.
+- `domain/entity`: usuarios, empresas, personas, visitas, incidentes y registros de auditoria.
 - `domain/repository`: puertos de persistencia independientes de JDBC.
 - `application/service`: autenticacion, autorizacion, sesion, hash y validadores.
-- `application/usecase`: operaciones autorizadas de usuarios, empresas, personas y visitas.
+- `application/usecase`: operaciones autorizadas de usuarios, empresas, personas, visitas, incidentes y auditoria.
 - `infrastructure/database`: fabrica y comprobacion de conexiones.
 - `infrastructure/persistence`: adaptadores JDBC y transacciones.
 - `infrastructure/ui`: vistas JavaFX, controladores MVC y tareas asincronas.
@@ -61,9 +61,10 @@ Un volumen nuevo ejecuta automaticamente esquema, datos y migracion. Para una ba
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/03-usuarios-seguridad.sql'
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/04-personas-empresas.sql'
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/05-control-visitas.sql'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/06-incidentes-auditoria.sql'
 ```
 
-Las migraciones son repetibles. La cuarta agrega solamente `visitas.placa_vehiculo`, un indice para visitas abiertas, estados de visita y permisos granulares. No borra ni reemplaza visitas existentes.
+Las migraciones son repetibles. La quinta agrega permisos granulares e indices para incidentes y trazabilidad. No borra ni reemplaza registros existentes.
 
 Para detener MySQL conservando los datos:
 
@@ -86,12 +87,12 @@ mvn test
 La prueba de integracion con MySQL se ejecuta de forma explicita y requiere el contenedor y las variables anteriores:
 
 ```powershell
-mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT" test
+mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT,IncidentesAuditoriaMysqlIT" test
 ```
 
 ## 4. Inicializar usuarios academicos
 
-La inicializacion genera hashes seguros y cuatro visitas ficticias. No reemplaza usuarios ni visitas existentes:
+La inicializacion genera hashes seguros, visitas y tres incidentes ficticios. No reemplaza registros existentes:
 
 ```powershell
 mvn exec:java "-Dexec.args=--inicializar-demo"
@@ -114,7 +115,7 @@ Estas contrasenas son publicas y deliberadamente de demostracion. No deben reuti
 mvn javafx:run
 ```
 
-Tambien se puede iniciar `Main` con `--javafx`. El menu lateral incluye Control de visitas con paneles de Guarda, Funcionario e Historial. Los botones se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
+Tambien se puede iniciar `Main` con `--javafx`. El menu lateral incluye Control de visitas, Incidentes y Auditoria. Los botones se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
 
 La comprobacion JDBC sigue disponible:
 
@@ -141,8 +142,12 @@ Los permisos se consultan desde `roles`, `permisos` y `rol_permisos`. `ServicioA
 - Empresas: `CREAR_EMPRESA`, `CONSULTAR_EMPRESA` y `ACTUALIZAR_EMPRESA`.
 - Personas: `CREAR_PERSONA`, `CONSULTAR_PERSONA`, `ACTUALIZAR_PERSONA` y `CAMBIAR_ESTADO_ACCESO`.
 - Visitas: `PRERREGISTRAR_VISITA`, `SOLICITAR_INGRESO`, `CONSULTAR_VISITA`, `APROBAR_SOLICITUD`, `RECHAZAR_SOLICITUD`, `REGISTRAR_CHECK_IN`, `REGISTRAR_CHECK_OUT`, `REGULARIZAR_SALIDA_OLVIDADA` y `CONSULTAR_HISTORIAL_VISITAS`.
+- Incidentes: `REGISTRAR_INCIDENTE`, `CONSULTAR_INCIDENTE` y `ACTUALIZAR_INCIDENTE`.
+- Auditoria: se reutiliza `CONSULTAR_AUDITORIA` porque ya existia y expresaba exactamente la operacion.
 
 Superusuario y Supervisor poseen los permisos del modulo de visitas. El Guarda puede solicitar ingresos y pases, consultar, registrar entradas y salidas y regularizar. El Funcionario puede prerregistrar y responder solamente solicitudes dirigidas a el y de su empresa. Tambien puede consultar personas para seleccionar invitados, pero no administrarlas. Ocultar un boton nunca sustituye la comprobacion del caso de uso.
+
+En incidentes, Superusuario y Supervisor registran, consultan y actualizan. El Guarda registra y consulta, pero no altera el seguimiento. La bitacora completa solo es visible para Superusuario y Supervisor. El Funcionario no recibe acceso general a incidentes ni auditoria.
 
 ## Gestion de usuarios y auditoria
 
@@ -221,6 +226,42 @@ La inicializacion controlada agrega, si faltan, `DEMO-VIS-PRE`, `DEMO-VIS-NO`, `
 6. La sesion del Guarda mostrara `APROBADA` en el siguiente ciclo. Seleccione la visita y pulse **Registrar entrada**; el estado cambiara a `DENTRO`.
 7. Al retirarse la persona, seleccione la visita y pulse **Registrar salida**; terminara `FUERA`.
 
+## Incidentes de seguridad y trazabilidad
+
+Un **incidente** es un acontecimiento de seguridad ocurrido durante una visita. Un **evento de auditoria** es la evidencia de una accion ejecutada en SICA. Registrar un incidente crea una sola fila en `incidentes` y una entrada `CREACION_INCIDENTE` en la bitacora; no duplica el incidente como otro objeto de negocio.
+
+### Operaciones
+
+- Registrar un incidente relacionado con una visita existente.
+- Consultar todos o filtrar por visita, persona, responsable, fecha y estado.
+- Consultar detalle por ID.
+- Actualizar gravedad, estado, descripcion y acciones con justificacion obligatoria.
+- Aplicar `PROHIBICION_INGRESO` mediante el caso de uso existente de estados de acceso.
+
+La descripcion original no desaparece sin evidencia: cada actualizacion registra en auditoria un resumen anterior/nuevo y la justificacion. Un incidente cerrado no puede reabrirse. No existen operaciones de eliminacion fisica.
+
+### Consultas de auditoria
+
+La pantalla de Auditoria permite filtrar los ultimos 200 eventos por usuario, accion, rango de fechas, tabla, registro, persona o visita. Los filtros de persona y visita incluyen relaciones verificables con `visitas` e `incidentes`. `ConsultaAuditoriaRepository` solo declara lectura; no hay casos de uso para editar o eliminar eventos.
+
+La aplicacion protege la bitacora mediante RBAC y ausencia de operaciones de escritura historica en UI/casos de uso. Esto no vuelve inviolable la tabla frente a un administrador de MySQL o alguien con acceso directo a las credenciales de base de datos; esa es la limitacion real del entorno academico actual.
+
+### Transacciones y pantallas
+
+Crear y actualizar incidentes utiliza `EjecutorTransaccionalJdbc`: cambio y auditoria comparten conexion, `commit` y `rollback`. La actualizacion bloquea la fila con `SELECT ... FOR UPDATE` y rechaza una version modificada por otra sesion.
+
+La pantalla **Incidentes** lista, filtra, registra, muestra detalle, guarda seguimiento y permite aplicar una prohibicion explicita segun permisos. La pantalla **Auditoria** es de solo lectura. Ambos controladores usan `EjecutorTareasUi` para no bloquear JavaFX.
+
+Para probar:
+
+1. Ejecute `mvn exec:java "-Dexec.args=--inicializar-demo"`.
+2. Inicie JavaFX con el Supervisor de Seguridad.
+3. Abra **Incidentes**, seleccione o escriba un ID de visita, complete tipo, gravedad y descripcion y registre.
+4. Seleccione la fila, escriba una justificacion y guarde el seguimiento.
+5. Abra **Auditoria** y filtre `CREACION_INCIDENTE` o `ACTUALIZACION_INCIDENTE`.
+
+Datos idempotentes: `DEMO_NOVEDAD`, `DEMO_SUPERVISION` y `DEMO_RESTRICCION`. El ultimo utiliza una visita historica de Bruno Restringido Demo y demuestra que la prohibicion no elimina la visita ni el incidente.
+
 ## Principios y patrones aplicados
 
 - Responsabilidad unica: hash, autenticacion, autorizacion, validacion, UI y JDBC estan separados.
@@ -233,6 +274,7 @@ La inicializacion controlada agrega, si faltan, `DEMO-VIS-PRE`, `DEMO-VIS-NO`, `
 - Ejecutor transaccional: reutiliza el limite de transaccion y evita duplicar `commit`, `rollback` y auditoria.
 - Fabrica simple: `FabricaVisita` centraliza la construccion valida de cada tipo de solicitud.
 - Polling Observer: el actualizador entrega periodicamente una lista a su callback sin acoplarse a la vista.
+- Read model: `RegistroAuditoria` expone una lectura inmutable separada de `EventoAuditoria`, que representa una escritura nueva.
 
 No se agregaron patrones cuyo uso no fuera necesario.
 
@@ -245,9 +287,10 @@ Se conservan las 11 tablas originales. Los cambios de seguridad son:
 - `bitacora_auditoria.nombre_usuario_intentado VARCHAR(120)` para aceptar correos completos.
 - `personas.foto_url VARCHAR(500)` para una referencia opcional, sin almacenar archivos binarios.
 - Estados `ACTIVO` y `PROHIBICION_INGRESO` sin eliminar los estados fisicos previos.
-- Veinte permisos granulares agregados entre las etapas de seguridad, personas y visitas, distribuidos segun cada rol.
+- Veintitres permisos granulares agregados entre las etapas, distribuidos segun cada rol.
 - `visitas.placa_vehiculo VARCHAR(20)` e indice `(persona_id, estado_visita_id)` para los flujos de acceso.
 - Siete estados nuevos de visita; `RECHAZADA` se reutiliza porque ya existia.
+- Indices por visita, persona y responsable de incidente, y por entidad/registro de auditoria.
 - Coherencia entre esquema y migraciones: `usuarios.correo` obligatorio y `empresas.correo` opcional.
 
 Los detalles se encuentran en `database/decisiones-bd.md`.
@@ -256,4 +299,4 @@ Los detalles se encuentran en `database/decisiones-bd.md`.
 
 - `main`: entrega estable; no se modifica durante esta etapa.
 - `develop`: integracion.
-- `feature/control-visitas`: desarrollo de la cuarta etapa.
+- `feature/auditoria-incidentes`: desarrollo de la quinta etapa.

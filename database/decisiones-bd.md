@@ -61,3 +61,15 @@ Se agregaron nueve permisos granulares de visitas. El Funcionario atiende unicam
 Las operaciones que compiten usan `SELECT ... FOR UPDATE` y vuelven a validar el estado dentro de una transaccion. La auditoria comparte esa conexion. Para tolerar una diferencia entre el reloj de la JVM y el de MySQL, `fecha_respuesta` usa el mayor valor entre `CURRENT_TIMESTAMP` y `fecha_solicitud`, manteniendo la restriccion temporal sin confiar en el reloj del cliente.
 
 La migracion `004_control_visitas.sql` es repetible: consulta `information_schema` antes de crear columna e indice, e inserta catalogos y relaciones con claves unicas. No elimina ni modifica visitas preexistentes.
+
+## Quinta etapa: incidentes y consultas de auditoria
+
+La tabla `incidentes` reconstruida ya era mas completa que el minimo descrito por el profesor: ademas de visita, responsable, fecha y descripcion, contenia `persona_id`, `tipo`, `gravedad`, `estado`, `acciones_tomadas`, fecha de reporte y cierre. Por ello no se agregaron columnas ni una tabla de seguimiento. Se reutilizan los estados `ABIERTO`, `EN_REVISION` y `CERRADO`, y cualquier correccion queda resumida en la bitacora.
+
+Se agregaron solamente tres permisos granulares: registrar, consultar y actualizar incidentes. `CONSULTAR_AUDITORIA` ya existia y se reutilizo. Superusuario y Supervisor tienen seguimiento y auditoria; el Guarda registra y consulta incidentes; el Funcionario no recibe acceso general. Esta distribucion se consulta desde MySQL y se vuelve a comprobar en cada caso de uso.
+
+Los indices `idx_incidentes_visita_fecha`, `idx_incidentes_persona_fecha`, `idx_incidentes_reportado_fecha` e `idx_bitacora_entidad_registro_fecha` corresponden a filtros reales de las pantallas. La migracion `005_incidentes_auditoria.sql` consulta `information_schema`, puede repetirse y no elimina datos.
+
+La bitacora es inmutable desde los casos de uso y la interfaz porque solo existe un puerto publico de consulta y no hay acciones de edicion o eliminacion. Sin embargo, el usuario de base de datos conserva permisos propios del entorno Docker; un administrador de MySQL podria modificar la tabla directamente. No se afirma inmutabilidad absoluta.
+
+Durante la revision preventiva se reforzo el check-in: despues de bloquear la fila de la persona, la transaccion vuelve a comprobar `activa` y el estado de acceso. El vencimiento de pases se compara con `CURRENT_TIMESTAMP` de MySQL. Esto cierra una ventana de carrera entre una prohibicion y un ingreso sin cambiar el flujo funcional existente.
