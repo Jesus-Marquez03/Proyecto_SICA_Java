@@ -85,8 +85,27 @@ class ReportesUseCaseTest {
                 LocalDate.of(2023, 1, 1), LocalDate.of(2026, 1, 2)));
     }
 
+    @Test
+    void dashboardRespetaEmpresaYOcultaIncidentesSinPermiso() {
+        RepositorioReporteMemoria repositorio = new RepositorioReporteMemoria();
+        Rol rol = new Rol(4, "Funcionario", "Prueba", true, true,
+                Set.of(new Permiso(1, PermisosSistema.CONSULTAR_VISITA,
+                        "Consultar visitas", "Prueba")));
+        Usuario actor = new Usuario(9L, rol, 25L, "Zona Demo", "funcionario",
+                "hash", "Ana", "Demo", "ana@sica.local", true, null);
+
+        ResumenDashboard resultado = new ConsultarResumenDashboardUseCase(
+                repositorio, new ServicioAutorizacion()).ejecutar(actor);
+
+        assertEquals(25L, repositorio.ultimaEmpresaId);
+        assertEquals(false, repositorio.incluirIncidentes);
+        assertEquals(false, resultado.tieneProgreso());
+        assertEquals(0, resultado.progresoFinalizadas());
+    }
+
     private static final class RepositorioReporteMemoria implements ReporteRepository {
         private Long ultimaEmpresaId;
+        private boolean incluirIncidentes;
 
         @Override
         public ReporteAccesos consultarAccesos(LocalDate desde, LocalDate hasta,
@@ -126,6 +145,8 @@ class ReportesUseCaseTest {
         @Override
         public ResumenDashboard consultarDashboard(LocalDate hoy, Long empresaId,
                 boolean incluirIncidentes) {
+            ultimaEmpresaId = empresaId;
+            this.incluirIncidentes = incluirIncidentes;
             return new ResumenDashboard(0, 0, 0, 0, 0, 0,
                     List.of(), List.<ActividadReciente>of());
         }

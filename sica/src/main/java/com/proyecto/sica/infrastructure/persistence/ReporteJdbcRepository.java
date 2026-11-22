@@ -80,7 +80,7 @@ public final class ReporteJdbcRepository implements ReporteRepository {
                 JOIN visita_estados ev ON ev.id=v.estado_visita_id
                 JOIN personas p ON p.id=v.visitante_persona_id
                 JOIN usuarios u ON u.id=v.anfitrion_usuario_id
-                LEFT JOIN empresas e ON e.id=p.empresa_id
+                LEFT JOIN empresas e ON e.id=u.empresa_id
                 WHERE ev.codigo='DENTRO' AND v.fecha_ingreso IS NOT NULL
                 """ + (empresaId == null ? "" : " AND u.empresa_id=?")
                 + " ORDER BY v.fecha_ingreso";
@@ -118,23 +118,26 @@ public final class ReporteJdbcRepository implements ReporteRepository {
     @Override
     public EstadisticasIncidentes consultarIncidentes(LocalDate desde, LocalDate hasta,
             Long empresaId) {
-        String alcance = empresaId == null ? "" : " AND p.empresa_id=?";
+        String alcance = empresaId == null ? "" : " AND u.empresa_id=?";
         String totales = """
                 SELECT COUNT(*) total,
                     COALESCE(SUM(i.estado='ABIERTO'),0) abiertos,
                     COALESCE(SUM(i.estado='EN_REVISION'),0) revision,
                     COALESCE(SUM(i.estado='CERRADO'),0) cerrados
-                FROM incidentes i JOIN personas p ON p.id=i.persona_id
+                FROM incidentes i JOIN visitas v ON v.id=i.visita_id
+                JOIN usuarios u ON u.id=v.anfitrion_usuario_id
                 WHERE i.fecha_incidente>=? AND i.fecha_incidente<?
                 """ + alcance;
         String gravedad = """
                 SELECT i.gravedad codigo,COUNT(*) cantidad
-                FROM incidentes i JOIN personas p ON p.id=i.persona_id
+                FROM incidentes i JOIN visitas v ON v.id=i.visita_id
+                JOIN usuarios u ON u.id=v.anfitrion_usuario_id
                 WHERE i.fecha_incidente>=? AND i.fecha_incidente<?
                 """ + alcance + " GROUP BY i.gravedad ORDER BY i.gravedad";
         String fechas = """
                 SELECT DATE(i.fecha_incidente) fecha,COUNT(*) cantidad
-                FROM incidentes i JOIN personas p ON p.id=i.persona_id
+                FROM incidentes i JOIN visitas v ON v.id=i.visita_id
+                JOIN usuarios u ON u.id=v.anfitrion_usuario_id
                 WHERE i.fecha_incidente>=? AND i.fecha_incidente<?
                 """ + alcance + " GROUP BY DATE(i.fecha_incidente) ORDER BY fecha";
         try (Connection c = connectionFactory.obtenerConexion()) {
