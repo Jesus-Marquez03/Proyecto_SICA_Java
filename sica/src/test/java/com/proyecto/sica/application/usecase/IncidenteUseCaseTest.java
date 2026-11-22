@@ -21,12 +21,14 @@ import com.proyecto.sica.domain.entity.EventoAuditoria;
 import com.proyecto.sica.domain.entity.GravedadIncidente;
 import com.proyecto.sica.domain.entity.Incidente;
 import com.proyecto.sica.domain.entity.Persona;
+import com.proyecto.sica.domain.entity.Permiso;
 import com.proyecto.sica.domain.entity.RegistroAuditoria;
 import com.proyecto.sica.domain.entity.ResultadoCheckIn;
 import com.proyecto.sica.domain.entity.TipoPersona;
 import com.proyecto.sica.domain.entity.TipoSolicitudVisita;
 import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.domain.entity.Visita;
+import com.proyecto.sica.domain.entity.Rol;
 import com.proyecto.sica.domain.repository.ConsultaAuditoriaRepository;
 import com.proyecto.sica.domain.repository.FiltroAuditoria;
 import com.proyecto.sica.domain.repository.FiltroIncidentes;
@@ -39,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -111,6 +114,18 @@ class IncidenteUseCaseTest {
                 () -> crear.ejecutar(actor, solicitud("No autorizado")));
         assertThrows(AccesoDenegadoException.class,
                 () -> consultar.ejecutar(actor, FiltroIncidentes.todos()));
+    }
+
+    @Test
+    void impideConsultarIncidenteDeEmpresaAjena() {
+        Incidente creado = crear.ejecutar(supervisor, solicitud("Ambito"));
+        Rol rolEmpresa = new Rol(4, "Funcionario", "Prueba", true, true,
+                Set.of(new Permiso(1, PermisosSistema.CONSULTAR_INCIDENTE,
+                        "Consultar", "Prueba")));
+        Usuario funcionarioAjeno = new Usuario(50L, rolEmpresa, 99L, "Empresa ajena",
+                "ajeno", "hash", "Funcionario", "Ajeno", "ajeno@test", true, null);
+        assertThrows(AccesoDenegadoException.class,
+                () -> consultarId.ejecutar(funcionarioAjeno, creado.getId()));
     }
 
     @Test
