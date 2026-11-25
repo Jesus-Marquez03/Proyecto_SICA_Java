@@ -4,6 +4,8 @@ import com.proyecto.sica.domain.entity.EstadoIncidente;
 import com.proyecto.sica.domain.entity.GravedadIncidente;
 import com.proyecto.sica.domain.entity.Incidente;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
@@ -59,6 +61,7 @@ public final class IncidentesView {
                 "", "ABIERTO", "EN_REVISION", "CERRADO"));
         filtroEstado.setValue("");
         filtroEstado.setPromptText("Todos los estados");
+        ComboBoxLegible.configurar(filtroEstado, valor -> valor.isBlank() ? "Todos los estados" : valor);
         preparar(filtroVisita, "ID visita"); preparar(filtroPersona, "ID persona");
         preparar(filtroResponsable, "ID responsable"); preparar(filtroDesde, "Desde AAAA-MM-DD");
         preparar(filtroHasta, "Hasta AAAA-MM-DD");
@@ -82,11 +85,14 @@ public final class IncidentesView {
         columna("Descripcion", Incidente::getDescripcion, 260);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tabla.setMinHeight(235);
+        TablaCopiable.habilitar(tabla);
 
         gravedad.setItems(FXCollections.observableArrayList(GravedadIncidente.values()));
         gravedad.setValue(GravedadIncidente.BAJA);
         estado.setItems(FXCollections.observableArrayList(EstadoIncidente.values()));
         estado.setValue(EstadoIncidente.ABIERTO);
+        ComboBoxLegible.configurar(gravedad, Enum::name);
+        ComboBoxLegible.configurar(estado, Enum::name);
         preparar(visitaId, "ID de visita"); preparar(tipo, "Tipo de incidente");
         preparar(fecha, "AAAA-MM-DDTHH:MM"); preparar(justificacion, "Justificacion del cambio");
         descripcion.setPromptText("Descripcion del hecho"); descripcion.setPrefRowCount(3);

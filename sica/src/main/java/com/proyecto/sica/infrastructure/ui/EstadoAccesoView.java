@@ -2,6 +2,8 @@ package com.proyecto.sica.infrastructure.ui;
 
 import com.proyecto.sica.domain.entity.EstadoAcceso;
 import com.proyecto.sica.domain.entity.Persona;
+import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -27,6 +29,7 @@ public final class EstadoAccesoView {
         Label titulo = new Label("Estados de acceso");
         titulo.getStyleClass().add("titulo-dashboard");
         estadoCombo.setPromptText("Nuevo estado");
+        ComboBoxLegible.configurar(estadoCombo, EstadoAcceso::getNombre);
         cambiarButton.getStyleClass().add("boton-principal");
         cambiarButton.setOnAction(evento -> onCambiar.run());
         HBox cabecera = new HBox(12, titulo, estadoCombo, cambiarButton);
@@ -39,6 +42,7 @@ public final class EstadoAccesoView {
                 ? "Sin empresa" : persona.getEmpresa().getNombre());
         agregarColumna("Estado actual", persona -> persona.getEstadoAcceso().getNombre());
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TablaCopiable.habilitar(tabla);
         root.getStyleClass().add("modulo-root");
         root.setTop(cabecera);
         root.setCenter(tabla);

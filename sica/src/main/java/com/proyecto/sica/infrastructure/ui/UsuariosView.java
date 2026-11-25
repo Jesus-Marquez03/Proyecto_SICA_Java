@@ -6,6 +6,8 @@ import com.proyecto.sica.domain.entity.Empresa;
 import com.proyecto.sica.domain.entity.Rol;
 import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +28,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 
 /** Administracion funcional de usuarios, roles y estado de acceso al sistema. */
 public final class UsuariosView {
@@ -74,7 +75,8 @@ public final class UsuariosView {
         permisos.setWrapText(true);
         permisos.setPrefRowCount(4);
         password.setPromptText("Solo es obligatoria al crear");
-        rol.setConverter(conversorRol());
+        ComboBoxLegible.configurar(rol, Rol::getNombre);
+        ComboBoxLegible.configurar(empresa, Empresa::getNombre);
         tabla.getSelectionModel().selectedItemProperty().addListener(
                 (obs, anterior, seleccionado) -> mostrarSeleccion(seleccionado));
         rol.valueProperty().addListener((obs, anterior, seleccionado) -> mostrarPermisos(seleccionado));
@@ -88,6 +90,7 @@ public final class UsuariosView {
         tabla.getColumns().add(columna("Estado", u -> u.isActivo() ? "Activo" : "Inactivo"));
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tabla.setMinHeight(520);
+        TablaCopiable.habilitar(tabla);
     }
 
     private TableColumn<Usuario, String> columna(String titulo,
@@ -142,13 +145,6 @@ public final class UsuariosView {
         VBox caja = new VBox(12, etiqueta, contenido);
         caja.getStyleClass().addAll("tarjeta-bento", "tarjeta-administrativa");
         return caja;
-    }
-
-    private StringConverter<Rol> conversorRol() {
-        return new StringConverter<>() {
-            @Override public String toString(Rol objeto) { return objeto == null ? "" : objeto.getNombre(); }
-            @Override public Rol fromString(String texto) { return null; }
-        };
     }
 
     private void mostrarSeleccion(Usuario seleccionado) {

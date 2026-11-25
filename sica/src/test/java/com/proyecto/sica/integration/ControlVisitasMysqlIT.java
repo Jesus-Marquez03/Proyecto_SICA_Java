@@ -54,6 +54,10 @@ class ControlVisitasMysqlIT {
         ConfiguracionAplicacion appFuncionario = new ConfiguracionAplicacion();
         Usuario funcionario = appFuncionario.getServicioAutenticacion().iniciarSesion(
                 "funcionario@sica.example", "SicaFuncionario2026!".toCharArray());
+        assertEquals(java.util.List.of(funcionario.getId()),
+                appGuarda.getConsultarAnfitrionesUseCase()
+                        .ejecutar(guarda, funcionario.getEmpresaId()).stream()
+                        .map(Usuario::getId).toList());
 
         String documento = "IT" + System.currentTimeMillis();
         Persona invitada = appGuarda.getCrearPersonaUseCase().ejecutar(guarda,

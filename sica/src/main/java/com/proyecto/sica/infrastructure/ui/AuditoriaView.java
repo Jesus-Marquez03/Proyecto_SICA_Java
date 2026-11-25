@@ -2,6 +2,7 @@ package com.proyecto.sica.infrastructure.ui;
 
 import com.proyecto.sica.domain.entity.RegistroAuditoria;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.format.DateTimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
@@ -55,6 +56,7 @@ public final class AuditoriaView {
         columna("Resultado", RegistroAuditoria::resultado, 85);
         columna("Detalles", RegistroAuditoria::descripcion, 320);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TablaCopiable.habilitar(tabla);
         VBox.setVgrow(tabla, Priority.ALWAYS);
         root.setTop(cabecera);
         root.setCenter(tabla);

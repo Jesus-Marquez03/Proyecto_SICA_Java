@@ -7,6 +7,7 @@ import com.proyecto.sica.domain.entity.PersonaDentroReporte;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
 import com.proyecto.sica.infrastructure.ui.components.IconosSica;
 import com.proyecto.sica.infrastructure.ui.components.TarjetaMetrica;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -97,6 +98,9 @@ public final class ReportesView {
                 ? "--" : p.fechaIngreso().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
         configurarCategorias(tablaEstados);
         configurarCategorias(tablaGravedad);
+        TablaCopiable.habilitar(tablaDentro);
+        TablaCopiable.habilitar(tablaEstados);
+        TablaCopiable.habilitar(tablaGravedad);
     }
 
     private TableColumn<PersonaDentroReporte, String> columnaPersona(String titulo,

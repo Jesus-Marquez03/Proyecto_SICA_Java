@@ -64,7 +64,38 @@
     -fx-border-radius: 9px;
     -fx-background-radius: 9px;
 }
-.campo, .text-field, .password-field, .combo-box, .date-picker { -fx-padding: 9px 11px; }
+.campo, .text-field, .password-field, .date-picker { -fx-padding: 9px 11px; }
+.combo-box {
+    -fx-padding: 0;
+    -fx-alignment: center-left;
+}
+.combo-box > .list-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 0 10px 0 11px;
+    -fx-min-height: 38px;
+    -fx-pref-height: 38px;
+    -fx-text-fill: #181818;
+}
+.combo-box .arrow-button {
+    -fx-alignment: center;
+    -fx-padding: 0 11px 0 8px;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #d8d8d8;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 4px;
+}
+.combo-box-popup .list-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 8px 11px;
+    -fx-min-height: 34px;
+    -fx-text-fill: #181818;
+    -fx-background-color: white;
+}
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:selected { -fx-background-color: #e7e7e7; -fx-text-fill: #111111; }
 .text-area { -fx-padding: 3px; }
 .text-area .content { -fx-background-color: #fafafa; -fx-background-radius: 8px; }
 .campo:focused, .text-field:focused, .password-field:focused,
@@ -192,7 +223,10 @@
 .titulo-tarjeta { -fx-font-size: 14px; -fx-font-weight: 800; }
 .valor-metrica { -fx-font-size: 34px; -fx-font-weight: 800; -fx-text-fill: #111111; }
 .detalle-metrica { -fx-font-size: 11px; }
-.valor-progreso { -fx-font-size: 18px; -fx-font-weight: 800; }
+.valor-progreso { -fx-font-size: 28px; -fx-font-weight: 900; }
+.tarjeta-progreso-mensual { -fx-spacing: 17px; }
+.tarjeta-progreso-mensual .detalle-metrica { -fx-font-size: 12px; }
+.progreso-mensual .percentage { -fx-fill: transparent; -fx-font-size: 0px; }
 .progress-indicator { -fx-progress-color: #111111; }
 .chart { -fx-background-color: transparent; -fx-padding: 8px; }
 .chart-plot-background { -fx-background-color: #f7f7f7; -fx-background-radius: 10px; }
@@ -253,6 +287,11 @@
     -fx-padding: 8px 11px;
     -fx-font-weight: 700;
     -fx-text-fill: #343434;
+}
+.mensaje-combo-vacio {
+    -fx-text-fill: #5f5f5f;
+    -fx-font-size: 11px;
+    -fx-padding: 0 2px 2px 2px;
 }
 .tarjeta-administrativa { -fx-padding: 20px; }
 .permisos-consulta { -fx-background-color: #f4f4f4; }
@@ -329,4 +368,15 @@
 .notificacion-detalle { -fx-font-size: 11px; -fx-text-fill: #666666; -fx-max-width: 235px; }
 
 .tooltip { -fx-background-color: #111111; -fx-text-fill: white; }
+.context-menu.menu-copia-tabla {
+    -fx-background-color: white;
+    -fx-background-radius: 9px;
+    -fx-border-color: #d8d8d8;
+    -fx-border-radius: 9px;
+    -fx-padding: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 14, 0.10, 0, 5);
+}
+.menu-copia-tabla .menu-item { -fx-background-radius: 7px; -fx-padding: 7px 12px; }
+.menu-copia-tabla .menu-item:focused { -fx-background-color: #e7e7e7; }
+.menu-copia-tabla .menu-item:focused .label { -fx-text-fill: #111111; }
 .alert .dialog-pane { -fx-background-color: white; }
