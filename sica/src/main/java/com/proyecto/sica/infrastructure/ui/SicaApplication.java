@@ -28,7 +28,6 @@ public final class SicaApplication extends Application {
     private ConfiguracionAplicacion configuracion;
     private LoginView loginView;
     private VisitasController visitasController;
-    private AnimacionBiometricaView biometricaView;
     private DashboardView dashboardView;
 
     public static void iniciar(String... args) { launch(args); }
@@ -72,7 +71,6 @@ public final class SicaApplication extends Application {
         ReportesView reportesView = new ReportesView();
         UsuariosView usuariosView = new UsuariosView();
         AuditoriaView auditoriaView = new AuditoriaView();
-        biometricaView = new AnimacionBiometricaView();
 
         DashboardController inicioController = new DashboardController(inicioView, usuario,
                 configuracion.getConsultarResumenDashboardUseCase());
@@ -120,6 +118,10 @@ public final class SicaApplication extends Application {
         boolean puedeEstados = tiene(usuario, PermisosSistema.CONSULTAR_PERSONA);
         visitasView.integrarEstadosAcceso(estadoView.getRoot(), puedeEstados);
         dashboardView = new DashboardView(usuario, this::cerrarSesion);
+        empresaView.alConfirmar(dashboardView::mostrarConfirmacion);
+        personaView.alConfirmar(dashboardView::mostrarConfirmacion);
+        visitasView.alConfirmar(dashboardView::mostrarConfirmacion);
+        incidentesView.alConfirmar(dashboardView::mostrarConfirmacion);
         registrarNavegacion(usuario, inicioView, inicioController, empresaView, empresaController,
                 personaView, personaController, visitasView, estadoController, incidentesView,
                 incidentesController, reportesView, reportesController, usuariosView,
@@ -175,12 +177,9 @@ public final class SicaApplication extends Application {
         dashboardView.registrarOpcion("Bitacora", TipoIcono.BITACORA,
                 tiene(usuario, PermisosSistema.CONSULTAR_AUDITORIA),
                 () -> abrir(auditoriaView.getRoot(), auditoriaController::cargar));
-        dashboardView.registrarOpcion("Animacion biometrica", TipoIcono.BIOMETRIA, true,
-                () -> abrir(biometricaView.getRoot(), () -> { }));
     }
 
     private void abrir(Parent contenido, Runnable alAbrir) {
-        if (biometricaView != null && contenido != biometricaView.getRoot()) biometricaView.detener();
         dashboardView.mostrarContenido(contenido);
         alAbrir.run();
     }
@@ -214,6 +213,6 @@ public final class SicaApplication extends Application {
 
     private void detenerVistasActivas() {
         if (visitasController != null) { visitasController.close(); visitasController = null; }
-        if (biometricaView != null) { biometricaView.detener(); biometricaView = null; }
+        if (dashboardView != null) dashboardView.detenerNotificaciones();
     }
 }

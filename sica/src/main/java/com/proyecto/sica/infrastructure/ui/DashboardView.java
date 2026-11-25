@@ -3,6 +3,7 @@ package com.proyecto.sica.infrastructure.ui;
 import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.infrastructure.ui.components.FondoArquitectonico;
 import com.proyecto.sica.infrastructure.ui.components.IconosSica;
+import com.proyecto.sica.infrastructure.ui.components.NotificacionOperacion;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +31,7 @@ public final class DashboardView {
     private final ScrollPane contenido = new ScrollPane();
     private final Label seccionActual = new Label("Dashboard");
     private final Map<String, Button> botones = new LinkedHashMap<>();
+    private final NotificacionOperacion notificacion = new NotificacionOperacion();
 
     public DashboardView(Usuario usuario, Runnable alCerrarSesion) {
         construir(usuario, alCerrarSesion);
@@ -46,7 +48,9 @@ public final class DashboardView {
         aplicacion.setLeft(crearBarraLateral(usuario, alCerrarSesion));
         aplicacion.setCenter(crearAreaPrincipal(usuario));
         StackPane.setMargin(aplicacion, new Insets(22));
-        root.getChildren().addAll(fondo, aplicacion);
+        StackPane.setAlignment(notificacion, Pos.TOP_RIGHT);
+        StackPane.setMargin(notificacion, new Insets(104, 44, 0, 0));
+        root.getChildren().addAll(fondo, aplicacion, notificacion);
     }
 
     private Node crearBarraLateral(Usuario usuario, Runnable alCerrarSesion) {
@@ -145,6 +149,14 @@ public final class DashboardView {
 
     public void mostrarContenido(Parent nuevoContenido) {
         contenido.setContent(nuevoContenido);
+    }
+
+    public void mostrarConfirmacion(String mensaje) {
+        notificacion.mostrar(mensaje);
+    }
+
+    public void detenerNotificaciones() {
+        notificacion.detener();
     }
 
     public Parent getRoot() {
