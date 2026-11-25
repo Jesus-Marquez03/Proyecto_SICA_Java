@@ -5,6 +5,8 @@ import com.proyecto.sica.domain.entity.Persona;
 import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.domain.entity.Visita;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.LocalDate;
 import java.util.List;
@@ -51,6 +53,7 @@ public final class VisitasView {
     private final TableView<Visita> historialTable = crearTabla();
     private final ComboBox<Empresa> empresaCombo = new ComboBox<>();
     private final ComboBox<Usuario> anfitrionCombo = new ComboBox<>();
+    private final Label anfitrionesEstado = new Label();
     private final TextArea motivoGuardaArea = new TextArea();
     private final TextField placaGuardaField = new TextField();
     private final Button noAnunciadaButton = new Button("Solicitar no anunciada");
@@ -77,6 +80,8 @@ public final class VisitasView {
     private void construir() {
         root.getStyleClass().add("modulo-root");
         mostrarEncabezadoControl();
+        ComboBoxLegible.configurar(empresaCombo, Empresa::getNombre);
+        ComboBoxLegible.configurar(anfitrionCombo, Usuario::getNombreCompleto);
         documentoField.setPromptText("Numero de documento");
         Button buscarButton = new Button("Buscar persona");
         buscarButton.getStyleClass().add("boton-neutro");
@@ -105,6 +110,9 @@ public final class VisitasView {
         empresaCombo.setPromptText("Empresa destino");
         empresaCombo.setOnAction(evento -> onEmpresaSeleccionada.run());
         anfitrionCombo.setPromptText("Funcionario anfitrion");
+        anfitrionesEstado.getStyleClass().add("mensaje-combo-vacio");
+        anfitrionesEstado.setVisible(false);
+        anfitrionesEstado.setManaged(false);
         motivoGuardaArea.setPromptText("Motivo o justificacion");
         motivoGuardaArea.setPrefRowCount(2);
         placaGuardaField.setPromptText("Placa opcional");
@@ -119,7 +127,8 @@ public final class VisitasView {
         formulario.setHgap(8);
         formulario.setVgap(8);
         formulario.addRow(0, empresaCombo, anfitrionCombo, placaGuardaField);
-        formulario.add(motivoGuardaArea, 0, 1, 3, 1);
+        formulario.add(anfitrionesEstado, 0, 1, 3, 1);
+        formulario.add(motivoGuardaArea, 0, 2, 3, 1);
         VBox contenido = new VBox(10, formulario,
                 new HBox(8, noAnunciadaButton, paseButton, checkInButton,
                         checkOutButton, regularizarButton), visitasTable);
@@ -170,6 +179,7 @@ public final class VisitasView {
                 ? "" : visita.getFechaProgramada().toString().replace('T', ' '));
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tabla.setPrefHeight(360);
+        TablaCopiable.habilitar(tabla);
         return tabla;
     }
 
@@ -215,7 +225,25 @@ public final class VisitasView {
         empresaCombo.setItems(FXCollections.observableArrayList(empresas));
     }
     public void mostrarAnfitriones(List<Usuario> usuarios) {
+        anfitrionCombo.getSelectionModel().clearSelection();
         anfitrionCombo.setItems(FXCollections.observableArrayList(usuarios));
+        boolean vacio = usuarios.isEmpty();
+        anfitrionCombo.setDisable(vacio);
+        anfitrionCombo.setPromptText(vacio
+                ? "Sin funcionarios disponibles" : "Funcionario anfitrion");
+        anfitrionesEstado.setText(vacio
+                ? "No hay funcionarios anfitriones disponibles para esta empresa." : "");
+        anfitrionesEstado.setVisible(vacio);
+        anfitrionesEstado.setManaged(vacio);
+    }
+
+    public void preparandoAnfitriones() {
+        anfitrionCombo.getSelectionModel().clearSelection();
+        anfitrionCombo.getItems().clear();
+        anfitrionCombo.setDisable(true);
+        anfitrionCombo.setPromptText("Consultando funcionarios...");
+        anfitrionesEstado.setVisible(false);
+        anfitrionesEstado.setManaged(false);
     }
 
     public Parent getRoot() { return root; }

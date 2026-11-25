@@ -5,6 +5,8 @@ import com.proyecto.sica.domain.entity.Empresa;
 import com.proyecto.sica.domain.entity.Persona;
 import com.proyecto.sica.domain.entity.TipoPersona;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
 import java.util.function.Consumer;
@@ -67,12 +69,15 @@ public final class PersonaView {
                 ? "Sin empresa" : persona.getEmpresa().getNombre(), 170);
         agregarColumna("Estado", persona -> persona.getEstadoAcceso().getNombre(), 180);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TablaCopiable.habilitar(tabla);
         tabla.getSelectionModel().selectedItemProperty().addListener(
                 (observable, anterior, persona) -> cargarFormulario(persona));
 
         tipoPersonaCombo.setItems(FXCollections.observableArrayList(TipoPersona.values()));
         tipoPersonaCombo.setValue(TipoPersona.VISITANTE);
         empresaCombo.setPromptText("Sin empresa");
+        ComboBoxLegible.configurar(tipoPersonaCombo, TipoPersona::getNombreVisible);
+        ComboBoxLegible.configurar(empresaCombo, Empresa::getNombre);
         GridPane formulario = new GridPane();
         formulario.getStyleClass().add("formulario-administrativo");
         formulario.setHgap(12);

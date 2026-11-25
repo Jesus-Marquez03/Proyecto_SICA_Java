@@ -3,6 +3,7 @@ package com.proyecto.sica.infrastructure.ui;
 import com.proyecto.sica.application.usecase.SolicitudEmpresa;
 import com.proyecto.sica.domain.entity.Empresa;
 import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
 import java.util.function.Consumer;
@@ -56,6 +57,7 @@ public final class EmpresaView {
         agregarColumna("Telefono", empresa -> valor(empresa.getTelefono()), 130);
         agregarColumna("Correo", empresa -> valor(empresa.getCorreo()), 210);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TablaCopiable.habilitar(tabla);
         tabla.getSelectionModel().selectedItemProperty().addListener(
                 (observable, anterior, empresa) -> cargarFormulario(empresa));
 
