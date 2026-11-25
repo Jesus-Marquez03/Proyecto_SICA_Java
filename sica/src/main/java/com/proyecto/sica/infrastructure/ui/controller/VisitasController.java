@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Controlador MVC de los cuatro escenarios de acceso. */
 public final class VisitasController implements AutoCloseable {
@@ -45,6 +46,7 @@ public final class VisitasController implements AutoCloseable {
     private final RegularizarSalidaOlvidadaUseCase regularizar;
     private final ActualizadorPeriodico<Actualizacion> polling;
     private final AtomicBoolean errorPollingMostrado = new AtomicBoolean();
+    private final AtomicLong versionConsultaAnfitriones = new AtomicLong();
     private volatile String tipoDocumentoPolling;
     private volatile String documentoPolling;
     private Persona personaActual;
@@ -128,9 +130,26 @@ public final class VisitasController implements AutoCloseable {
 
     private void cargarAnfitriones() {
         Empresa empresa = vista.getEmpresa();
-        if (empresa == null) return;
-        EjecutorTareasUi.ejecutar(() -> consultarAnfitriones.ejecutar(actor, empresa.getId()),
-                vista::mostrarAnfitriones, this::mostrarError);
+        long version = versionConsultaAnfitriones.incrementAndGet();
+        if (empresa == null) {
+            vista.mostrarAnfitriones(List.of());
+            return;
+        }
+        long empresaId = empresa.getId();
+        vista.preparandoAnfitriones();
+        EjecutorTareasUi.ejecutar(() -> consultarAnfitriones.ejecutar(actor, empresaId),
+                anfitriones -> {
+                    Empresa actual = vista.getEmpresa();
+                    if (version == versionConsultaAnfitriones.get()
+                            && actual != null && actual.getId() == empresaId) {
+                        vista.mostrarAnfitriones(anfitriones);
+                    }
+                }, error -> {
+                    if (version == versionConsultaAnfitriones.get()) {
+                        vista.mostrarAnfitriones(List.of());
+                        mostrarError(error);
+                    }
+                });
     }
 
     private void crearSolicitud(boolean pase) {

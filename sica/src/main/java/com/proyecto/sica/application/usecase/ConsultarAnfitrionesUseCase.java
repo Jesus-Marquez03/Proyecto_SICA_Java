@@ -21,6 +21,8 @@ public final class ConsultarAnfitrionesUseCase {
         autorizacion.verificarPermiso(actor, PermisosSistema.CONSULTAR_VISITA);
         return repositorio.listarPorEmpresa(empresaId).stream()
                 .filter(usuario -> usuario.getRol().isRequiereEmpresa())
+                .filter(usuario -> usuario.getRol().tienePermiso(
+                        PermisosSistema.APROBAR_SOLICITUD))
                 .toList();
     }
 }
