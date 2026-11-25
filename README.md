@@ -116,7 +116,7 @@ Estas contrasenas son publicas y deliberadamente de demostracion. No deben reuti
 mvn javafx:run
 ```
 
-Tambien se puede iniciar `Main` con `--javafx`. El menu lateral contiene Dashboard, Control de acceso, Visitas, Personas, Empresas, Incidentes, Reportes, Usuarios y roles, Bitacora y Animacion biometrica. Los elementos se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
+Tambien se puede iniciar `Main` con `--javafx`. El menu lateral contiene nueve opciones: Dashboard, Control de acceso, Visitas, Personas, Empresas, Incidentes, Reportes, Usuarios y roles, y Bitacora. Los elementos se deshabilitan segun RBAC y cada caso de uso vuelve a comprobar el permiso. JDBC se ejecuta fuera del hilo grafico.
 
 La comprobacion JDBC sigue disponible:
 
@@ -294,22 +294,24 @@ Elementos visuales implementados:
 
 - Fondo arquitectonico abstracto construido con formas JavaFX locales, sin imagenes ni licencias externas.
 - Sidebar blanco, contenedor translucido, tarjetas Bento, tarjeta principal negra y superficies grises.
-- Familia central de iconos `SVGPath` para las diez opciones y acciones comunes; no se usan emojis ni PNG escalados.
-- CSS unico para tablas, formularios, botones, tabs, alertas, scroll y estados de seleccion.
+- Familia central de iconos `SVGPath` para las nueve opciones y acciones comunes; no se usan emojis ni PNG escalados.
+- CSS unico y clases reutilizables para encabezados, tablas, formularios, botones, filtros, alertas, scroll y estados de seleccion.
 - Contenido desplazable para ventanas intermedias; el diseno base se abre a 1366 x 820 y tiene minimo de 1050 x 680.
 - Administracion de usuarios con listado, alta, edicion, activacion/desactivacion y consulta de roles/permisos existentes. No existe editor de asignaciones porque no hay un caso de uso autorizado.
 
 `Control de acceso` y `Visitas` seleccionan paneles diferentes de la misma vista para no duplicar el modulo. La gestion de estados de acceso se conserva como pestana de Control de acceso. Todas las opciones navegan a contenido real y las operaciones siguen protegidas en aplicacion, no solo en botones.
 
-### Animacion biometrica
+### Confirmacion visual de operaciones
 
-`AnimacionBiometricaView` es una demostracion visual, no un mecanismo de autenticacion. La huella esta formada por seis crestas SVG independientes y recorre reposo, deteccion, revelado progresivo, barrido, confirmacion o error. La confirmacion usa check y notificacion flotante con transiciones nativas. No captura, compara, transmite ni almacena datos biometricos y nunca modifica accesos, permisos o sesiones. Las animaciones se detienen al salir de la vista; `-Dsica.movimientoReducido=true` omite la secuencia prolongada.
+La biometria ya no es una seccion independiente ni contiene controles de simulacion. `NotificacionOperacion` reutiliza la huella vectorial y muestra una confirmacion compacta en la esquina superior derecha despues de una operacion real exitosa, como registrar una entrada, guardar una persona o aprobar una solicitud. Una nueva confirmacion sustituye la anterior y las transiciones se detienen al cerrar sesion.
+
+Esta animacion no implementa autenticacion biometrica: no captura, compara, transmite ni almacena huellas, y tampoco concede permisos ni registra accesos por si sola. Los errores y las operaciones sin cambios no muestran el check de exito.
 
 ### Limitaciones visuales conocidas
 
 Las imagenes adjuntas se usaron como referencia para composicion, sidebar e iconos. El video MP4 no pudo decodificarse porque el entorno no dispone de `ffmpeg` ni un decodificador accesible, por lo que sus fotogramas no se afirman como inspeccionados. Ademas, el servicio de captura de ventanas de Windows devolvio `native pipe is unavailable`: se verifico que JavaFX inicia y que no produce advertencias CSS, pero la comparacion visual completa debe hacerse manualmente.
 
-Lista manual recomendada: iniciar con cada rol, recorrer las diez opciones, probar 1366 x 768 y una ventana maximizada, comprobar scroll, tablas, formularios y logout, y ejecutar las simulaciones correcta y de error de la huella.
+Lista manual recomendada: iniciar con cada rol, recorrer las nueve opciones, probar 1366 x 768 y una ventana maximizada, comprobar scroll, tablas, formularios, confirmaciones visuales y logout.
 
 ## Principios y patrones aplicados
 
