@@ -86,8 +86,10 @@ public final class IncidentesController {
                     .filter(e -> "PROHIBICION_INGRESO".equals(e.getCodigo())).findFirst()
                     .orElseThrow(() -> new IllegalStateException("No existe PROHIBICION_INGRESO"));
             return cambiarEstado.ejecutar(actor, seleccionado.getPersona().getId(), prohibicion.getId());
-        }, cambio -> vista.mostrarInfo(cambio
-                ? "Prohibicion aplicada y auditada" : "La persona ya tenia la prohibicion"));
+        }, cambio -> {
+            if (cambio) vista.mostrarInfo("Prohibicion aplicada y auditada");
+            else vista.mostrarAviso("La persona ya tenia la prohibicion");
+        });
     }
 
     private boolean permiso(String codigo) { return actor.getRol().tienePermiso(codigo); }

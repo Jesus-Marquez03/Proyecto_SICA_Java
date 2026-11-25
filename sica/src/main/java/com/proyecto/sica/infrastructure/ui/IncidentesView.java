@@ -3,7 +3,10 @@ package com.proyecto.sica.infrastructure.ui;
 import com.proyecto.sica.domain.entity.EstadoIncidente;
 import com.proyecto.sica.domain.entity.GravedadIncidente;
 import com.proyecto.sica.domain.entity.Incidente;
+import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -17,8 +20,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /** Vista funcional para registro, consulta y seguimiento de incidentes. */
@@ -49,16 +54,22 @@ public final class IncidentesView {
     }
 
     private void construir() {
-        Label titulo = new Label("Incidentes de seguridad");
-        titulo.getStyleClass().add("titulo-seccion");
+        root.getStyleClass().add("modulo-root");
         filtroEstado.setItems(FXCollections.observableArrayList(
                 "", "ABIERTO", "EN_REVISION", "CERRADO"));
         filtroEstado.setValue("");
+        filtroEstado.setPromptText("Todos los estados");
         preparar(filtroVisita, "ID visita"); preparar(filtroPersona, "ID persona");
         preparar(filtroResponsable, "ID responsable"); preparar(filtroDesde, "Desde AAAA-MM-DD");
         preparar(filtroHasta, "Hasta AAAA-MM-DD");
-        HBox filtros = new HBox(8, filtroVisita, filtroPersona, filtroResponsable,
+        buscar.getStyleClass().add("boton-principal");
+        FlowPane filtros = new FlowPane(9, 9, filtroVisita, filtroPersona, filtroResponsable,
                 filtroDesde, filtroHasta, filtroEstado, buscar);
+        filtros.getStyleClass().add("panel-filtros");
+        VBox cabecera = new VBox(16,
+                new EncabezadoModulo("Incidentes de seguridad",
+                        "Registra novedades y realiza seguimiento de incidentes.",
+                        TipoIcono.INCIDENTES), filtros);
 
         columna("ID", i -> String.valueOf(i.getId()), 60);
         columna("Fecha", i -> formato(i.getFechaIncidente()), 135);
@@ -70,6 +81,7 @@ public final class IncidentesView {
         columna("Estado", i -> i.getEstado().name(), 100);
         columna("Descripcion", Incidente::getDescripcion, 260);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tabla.setMinHeight(235);
 
         gravedad.setItems(FXCollections.observableArrayList(GravedadIncidente.values()));
         gravedad.setValue(GravedadIncidente.BAJA);
@@ -80,19 +92,44 @@ public final class IncidentesView {
         descripcion.setPromptText("Descripcion del hecho"); descripcion.setPrefRowCount(3);
         acciones.setPromptText("Acciones tomadas (opcional)"); acciones.setPrefRowCount(3);
         GridPane formulario = new GridPane();
-        formulario.setHgap(10); formulario.setVgap(8);
-        formulario.addRow(0, new Label("Visita"), visitaId, new Label("Tipo"), tipo,
-                new Label("Fecha"), fecha);
-        formulario.addRow(1, new Label("Gravedad"), gravedad, new Label("Estado"), estado,
-                new Label("Justificacion"), justificacion);
-        formulario.addRow(2, new Label("Descripcion"), descripcion,
-                new Label("Acciones"), acciones);
+        formulario.getStyleClass().add("formulario-incidente");
+        formulario.setHgap(10); formulario.setVgap(10);
+        agregarCampo(formulario, 0, 0, "Visita", visitaId);
+        agregarCampo(formulario, 0, 2, "Tipo", tipo);
+        agregarCampo(formulario, 0, 4, "Fecha", fecha);
+        agregarCampo(formulario, 1, 0, "Gravedad", gravedad);
+        agregarCampo(formulario, 1, 2, "Estado", estado);
+        agregarCampo(formulario, 1, 4, "Justificacion", justificacion);
+        agregarCampo(formulario, 2, 0, "Descripcion", descripcion);
+        GridPane.setColumnSpan(descripcion, 2);
+        agregarCampo(formulario, 2, 3, "Acciones", acciones);
+        GridPane.setColumnSpan(acciones, 2);
+        registrar.getStyleClass().add("boton-principal");
+        actualizar.getStyleClass().add("boton-neutro");
+        restringir.getStyleClass().add("boton-critico");
         HBox accionesBotones = new HBox(10, registrar, actualizar, restringir);
-        VBox contenido = new VBox(12, titulo, filtros, tabla, formulario, accionesBotones);
-        contenido.setPadding(new Insets(24));
-        root.setCenter(contenido);
+        Label tituloFormulario = new Label("Registro y seguimiento");
+        tituloFormulario.getStyleClass().add("titulo-formulario-interno");
+        VBox formularioCaja = new VBox(13, tituloFormulario, formulario, accionesBotones);
+        formularioCaja.getStyleClass().add("tarjeta-formulario");
+        VBox cuerpo = new VBox(14, tabla, formularioCaja);
+        VBox.setVgrow(tabla, Priority.ALWAYS);
+        root.setTop(cabecera);
+        root.setCenter(cuerpo);
+        BorderPane.setMargin(cuerpo, new Insets(16, 0, 0, 0));
         tabla.getSelectionModel().selectedItemProperty().addListener(
                 (obs, anterior, seleccionado) -> mostrarSeleccion(seleccionado));
+    }
+
+    private void agregarCampo(GridPane grid, int fila, int columna, String texto,
+            javafx.scene.control.Control campo) {
+        Label etiqueta = new Label(texto);
+        etiqueta.getStyleClass().add("etiqueta-campo");
+        campo.getStyleClass().add("campo-formulario");
+        campo.setMaxWidth(Double.MAX_VALUE);
+        grid.add(etiqueta, columna, fila);
+        grid.add(campo, columna + 1, fila);
+        GridPane.setHgrow(campo, Priority.ALWAYS);
     }
 
     private void mostrarSeleccion(Incidente incidente) {
@@ -140,8 +177,11 @@ public final class IncidentesView {
     public Button getActualizar() { return actualizar; }
     public Button getRestringir() { return restringir; }
     public Incidente seleccionado() { return tabla.getSelectionModel().getSelectedItem(); }
+    private Consumer<String> onConfirmacion = mensaje -> { };
+    public void alConfirmar(Consumer<String> accion) { onConfirmacion = accion; }
     public void mostrarError(String mensaje) { alerta(Alert.AlertType.ERROR, "Error", mensaje); }
-    public void mostrarInfo(String mensaje) { alerta(Alert.AlertType.INFORMATION, "SICA", mensaje); }
+    public void mostrarInfo(String mensaje) { onConfirmacion.accept(mensaje); }
+    public void mostrarAviso(String mensaje) { alerta(Alert.AlertType.INFORMATION, "SICA", mensaje); }
     private void alerta(Alert.AlertType tipoAlerta, String titulo, String mensaje) {
         Alert alerta = new Alert(tipoAlerta); alerta.setTitle(titulo);
         alerta.setHeaderText(null); alerta.setContentText(mensaje); alerta.showAndWait();
