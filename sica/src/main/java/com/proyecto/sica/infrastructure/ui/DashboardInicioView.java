@@ -81,13 +81,17 @@ public final class DashboardInicioView {
         VBox graficaCaja = tarjeta("Accesos de los ultimos 7 dias", grafica);
         graficaCaja.getStyleClass().add("tarjeta-grafica");
 
-        progreso.setPrefSize(145, 145);
+        progreso.getStyleClass().add("progreso-mensual");
+        progreso.setMinSize(160, 160);
+        progreso.setPrefSize(160, 160);
+        progreso.setMaxSize(160, 160);
         porcentaje.getStyleClass().add("valor-progreso");
         Label progresoDetalle = new Label("Visitas finalizadas del mes");
         progresoDetalle.getStyleClass().add("detalle-metrica");
         progresoDetalle.setWrapText(true);
         VBox progresoCaja = tarjeta("Progreso mensual", progreso, porcentaje, progresoDetalle);
-        progresoCaja.setAlignment(Pos.TOP_CENTER);
+        progresoCaja.getStyleClass().add("tarjeta-progreso-mensual");
+        progresoCaja.setAlignment(Pos.CENTER);
 
         actividad.getStyleClass().add("lista-actividad");
         VBox actividadCaja = tarjeta("Actividad reciente", actividad);
