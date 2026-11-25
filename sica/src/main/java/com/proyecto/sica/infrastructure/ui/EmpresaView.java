@@ -2,7 +2,10 @@ package com.proyecto.sica.infrastructure.ui;
 
 import com.proyecto.sica.application.usecase.SolicitudEmpresa;
 import com.proyecto.sica.domain.entity.Empresa;
+import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
+import java.util.function.Consumer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -37,14 +40,16 @@ public final class EmpresaView {
 
     private void construir() {
         root.getStyleClass().add("modulo-root");
-        Label titulo = new Label("Gestion de empresas");
-        titulo.getStyleClass().add("titulo-dashboard");
         buscarField.setPromptText("Buscar por nombre");
         Button buscarButton = new Button("Buscar");
         buscarButton.getStyleClass().add("boton-neutro");
         buscarButton.setOnAction(evento -> onBuscar.run());
-        HBox cabecera = new HBox(10, titulo, buscarField, buscarButton);
-        cabecera.getStyleClass().add("barra-modulo");
+        HBox filtros = new HBox(10, buscarField, buscarButton);
+        filtros.getStyleClass().add("panel-filtros");
+        VBox cabecera = new VBox(16,
+                new EncabezadoModulo("Gestion de empresas",
+                        "Administra las empresas registradas en Zona Acme.", TipoIcono.EMPRESAS),
+                filtros);
 
         agregarColumna("NIT", empresa -> empresa.getNit(), 120);
         agregarColumna("Nombre", empresa -> empresa.getNombre(), 220);
@@ -55,28 +60,40 @@ public final class EmpresaView {
                 (observable, anterior, empresa) -> cargarFormulario(empresa));
 
         GridPane formulario = new GridPane();
-        formulario.setHgap(10);
-        formulario.setVgap(10);
-        formulario.addRow(0, new Label("NIT"), nitField);
-        formulario.addRow(1, new Label("Nombre"), nombreField);
-        formulario.addRow(2, new Label("Direccion"), direccionField);
-        formulario.addRow(3, new Label("Telefono"), telefonoField);
-        formulario.addRow(4, new Label("Correo"), correoField);
+        formulario.getStyleClass().add("formulario-administrativo");
+        formulario.setHgap(12);
+        formulario.setVgap(13);
+        agregarCampo(formulario, 0, "NIT", nitField);
+        agregarCampo(formulario, 1, "Nombre", nombreField);
+        agregarCampo(formulario, 2, "Direccion", direccionField);
+        agregarCampo(formulario, 3, "Telefono", telefonoField);
+        agregarCampo(formulario, 4, "Correo", correoField);
         crearButton.getStyleClass().add("boton-principal");
         actualizarButton.getStyleClass().add("boton-neutro");
         crearButton.setOnAction(evento -> onCrear.run());
         actualizarButton.setOnAction(evento -> onActualizar.run());
         HBox acciones = new HBox(10, crearButton, actualizarButton);
-        VBox tarjeta = new VBox(14, new Label("Datos de la empresa"), formulario, acciones);
-        tarjeta.getStyleClass().add("tarjeta-modulo");
-        tarjeta.setPadding(new Insets(20));
+        Label tituloFormulario = new Label("Datos de la empresa");
+        tituloFormulario.getStyleClass().add("titulo-formulario-interno");
+        VBox tarjeta = new VBox(17, tituloFormulario, formulario, acciones);
+        tarjeta.getStyleClass().add("tarjeta-formulario");
         tarjeta.setPrefWidth(360);
+        tarjeta.setMinWidth(320);
 
         root.setTop(cabecera);
         root.setCenter(tabla);
         root.setRight(tarjeta);
-        BorderPane.setMargin(tabla, new Insets(16));
-        BorderPane.setMargin(tarjeta, new Insets(16, 16, 16, 0));
+        BorderPane.setMargin(tabla, new Insets(16, 14, 0, 0));
+        BorderPane.setMargin(tarjeta, new Insets(16, 0, 0, 0));
+    }
+
+    private void agregarCampo(GridPane formulario, int fila, String texto, TextField campo) {
+        Label etiqueta = new Label(texto);
+        etiqueta.getStyleClass().add("etiqueta-campo");
+        campo.getStyleClass().add("campo-formulario");
+        campo.setMaxWidth(Double.MAX_VALUE);
+        formulario.addRow(fila, etiqueta, campo);
+        GridPane.setHgrow(campo, javafx.scene.layout.Priority.ALWAYS);
     }
 
     private void agregarColumna(String titulo,
@@ -101,10 +118,12 @@ public final class EmpresaView {
     private Runnable onCrear = () -> { };
     private Runnable onActualizar = () -> { };
     private Runnable onBuscar = () -> { };
+    private Consumer<String> onConfirmacion = mensaje -> { };
 
     public void alCrear(Runnable accion) { onCrear = accion; }
     public void alActualizar(Runnable accion) { onActualizar = accion; }
     public void alBuscar(Runnable accion) { onBuscar = accion; }
+    public void alConfirmar(Consumer<String> accion) { onConfirmacion = accion; }
     public Parent getRoot() { return root; }
     public Empresa getSeleccionada() { return tabla.getSelectionModel().getSelectedItem(); }
     public String getTextoBusqueda() { return buscarField.getText(); }
@@ -119,7 +138,7 @@ public final class EmpresaView {
     public void permitirActualizar(boolean permitido) { actualizarButton.setDisable(!permitido); }
     public void mostrarError(String mensaje) { mostrarAlerta(Alert.AlertType.ERROR, "Error", mensaje); }
     public void mostrarInformacion(String mensaje) {
-        mostrarAlerta(Alert.AlertType.INFORMATION, "SICA", mensaje);
+        onConfirmacion.accept(mensaje);
     }
     private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
         Alert alerta = new Alert(tipo, mensaje);

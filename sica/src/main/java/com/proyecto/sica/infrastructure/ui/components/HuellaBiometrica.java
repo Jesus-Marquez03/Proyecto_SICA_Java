@@ -23,16 +23,26 @@ public final class HuellaBiometrica extends Pane {
     private SequentialTransition revelado;
 
     public HuellaBiometrica() {
-        setMinSize(190, 215);
-        setPrefSize(190, 215);
+        this(7.2, 190, 215);
+    }
+
+    /** Crea una huella compacta para componentes que no requieren el lector grande. */
+    public static HuellaBiometrica compacta() {
+        return new HuellaBiometrica(1.75, 48, 52);
+    }
+
+    private HuellaBiometrica(double escala, double ancho, double alto) {
+        setMinSize(ancho, alto);
+        setPrefSize(ancho, alto);
+        setMaxSize(ancho, alto);
         for (String cresta : CRESTAS) {
             SVGPath segmento = new SVGPath();
             segmento.setContent(cresta);
             segmento.getStyleClass().add("segmento-huella");
-            segmento.setScaleX(7.2);
-            segmento.setScaleY(7.2);
-            segmento.setLayoutX(10);
-            segmento.setLayoutY(15);
+            segmento.setScaleX(escala);
+            segmento.setScaleY(escala);
+            segmento.setLayoutX(escala > 2 ? 10 : 4);
+            segmento.setLayoutY(escala > 2 ? 15 : 5);
             segmentos.add(segmento);
             getChildren().add(segmento);
         }

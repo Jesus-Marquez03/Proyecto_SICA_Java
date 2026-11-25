@@ -1,6 +1,8 @@
 package com.proyecto.sica.infrastructure.ui;
 
 import com.proyecto.sica.domain.entity.RegistroAuditoria;
+import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.format.DateTimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
@@ -12,7 +14,9 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /** Vista de solo lectura para consultar eventos de auditoria. */
@@ -32,9 +36,15 @@ public final class AuditoriaView {
     public AuditoriaView() { construir(); }
 
     private void construir() {
-        Label titulo = new Label("Bitacora de auditoria"); titulo.getStyleClass().add("titulo-seccion");
-        HBox filtros1 = new HBox(8, usuario, accion, desde, hasta, buscar);
-        HBox filtros2 = new HBox(8, entidad, registro, persona, visita);
+        root.getStyleClass().add("modulo-root");
+        buscar.getStyleClass().add("boton-principal");
+        FlowPane filtros = new FlowPane(9, 9, usuario, accion, desde, hasta,
+                entidad, registro, persona, visita, buscar);
+        filtros.getStyleClass().add("panel-filtros");
+        VBox cabecera = new VBox(16,
+                new EncabezadoModulo("Bitacora de auditoria",
+                        "Consulta el historial de acciones del sistema.", TipoIcono.BITACORA),
+                filtros);
         columna("Fecha", r -> r.fechaEvento().format(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), 145);
         columna("Usuario", r -> r.nombreUsuario() == null
@@ -45,8 +55,10 @@ public final class AuditoriaView {
         columna("Resultado", RegistroAuditoria::resultado, 85);
         columna("Detalles", RegistroAuditoria::descripcion, 320);
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        VBox contenido = new VBox(12, titulo, filtros1, filtros2, tabla);
-        contenido.setPadding(new Insets(24)); root.setCenter(contenido);
+        VBox.setVgrow(tabla, Priority.ALWAYS);
+        root.setTop(cabecera);
+        root.setCenter(tabla);
+        BorderPane.setMargin(tabla, new Insets(16, 0, 0, 0));
     }
 
     private void columna(String titulo, java.util.function.Function<RegistroAuditoria, String> valor,

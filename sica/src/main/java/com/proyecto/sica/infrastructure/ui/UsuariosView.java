@@ -69,6 +69,7 @@ public final class UsuariosView {
         crear.getStyleClass().add("boton-principal");
         actualizar.getStyleClass().add("boton-neutro");
         cambiarEstado.getStyleClass().add("boton-neutro");
+        permisos.getStyleClass().add("permisos-consulta");
         permisos.setEditable(false);
         permisos.setWrapText(true);
         permisos.setPrefRowCount(4);
@@ -98,17 +99,29 @@ public final class UsuariosView {
 
     private GridPane formulario() {
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        agregar(grid, 0, "Nombre de usuario", usuario);
-        agregar(grid, 1, "Nombres", nombres);
-        agregar(grid, 2, "Apellidos", apellidos);
-        agregar(grid, 3, "Correo", correo);
-        agregar(grid, 4, "Contrasena inicial", password);
-        agregar(grid, 5, "Rol", rol);
-        agregar(grid, 6, "Empresa", empresa);
-        agregar(grid, 7, "Permisos del rol", permisos);
+        grid.getStyleClass().add("formulario-administrativo");
+        grid.setHgap(12);
+        grid.setVgap(9);
+        subtitulo(grid, 0, "Identificacion del usuario");
+        agregar(grid, 1, "Nombre de usuario", usuario);
+        subtitulo(grid, 2, "Informacion personal");
+        agregar(grid, 3, "Nombres", nombres);
+        agregar(grid, 4, "Apellidos", apellidos);
+        agregar(grid, 5, "Correo", correo);
+        subtitulo(grid, 6, "Datos de acceso");
+        agregar(grid, 7, "Contrasena inicial", password);
+        subtitulo(grid, 8, "Rol y empresa");
+        agregar(grid, 9, "Rol", rol);
+        agregar(grid, 10, "Empresa", empresa);
+        subtitulo(grid, 11, "Permisos consultables");
+        agregar(grid, 12, "Permisos del rol", permisos);
         return grid;
+    }
+
+    private void subtitulo(GridPane grid, int fila, String texto) {
+        Label subtitulo = new Label(texto);
+        subtitulo.getStyleClass().add("subtitulo-formulario");
+        grid.add(subtitulo, 0, fila, 2, 1);
     }
 
     private void agregar(GridPane grid, int fila, String texto, javafx.scene.Node campo) {
@@ -119,6 +132,7 @@ public final class UsuariosView {
         GridPane.setHgrow(campo, Priority.ALWAYS);
         if (campo instanceof javafx.scene.control.Control control) {
             control.setMaxWidth(Double.MAX_VALUE);
+            control.getStyleClass().add("campo-formulario");
         }
     }
 
@@ -126,7 +140,7 @@ public final class UsuariosView {
         Label etiqueta = new Label(titulo);
         etiqueta.getStyleClass().add("titulo-tarjeta");
         VBox caja = new VBox(12, etiqueta, contenido);
-        caja.getStyleClass().add("tarjeta-bento");
+        caja.getStyleClass().addAll("tarjeta-bento", "tarjeta-administrativa");
         return caja;
     }
 

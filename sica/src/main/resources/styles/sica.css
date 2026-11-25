@@ -155,7 +155,7 @@
 }
 
 .contenido-modulo-final { -fx-background-color: transparent; }
-.encabezado-modulo-final { -fx-spacing: 12px; }
+.encabezado-modulo-final { -fx-spacing: 12px; -fx-min-height: 46px; -fx-alignment: center-left; }
 .encabezado-modulo-final > .icono-contenedor {
     -fx-background-color: #111111;
     -fx-background-radius: 10px;
@@ -215,6 +215,60 @@
     -fx-alignment: center-left;
 }
 
+.panel-filtros {
+    -fx-background-color: rgba(255, 255, 255, 0.90);
+    -fx-background-radius: 13px;
+    -fx-border-color: rgba(255, 255, 255, 0.88);
+    -fx-border-radius: 13px;
+    -fx-padding: 11px 13px;
+    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.045), 12, 0.08, 0, 3);
+}
+
+.tarjeta-formulario {
+    -fx-background-color: rgba(255, 255, 255, 0.94);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.90);
+    -fx-border-radius: 16px;
+    -fx-padding: 20px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.07), 17, 0.10, 0, 5);
+}
+
+.titulo-formulario-interno { -fx-font-size: 17px; -fx-font-weight: 800; -fx-text-fill: #111111; }
+.subtitulo-formulario {
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #333333;
+    -fx-padding: 7px 0 2px 0;
+}
+.formulario-administrativo .etiqueta-campo,
+.formulario-incidente .etiqueta-campo { -fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #4e4e4e; }
+.campo-formulario { -fx-min-height: 39px; -fx-pref-height: 39px; }
+.text-area.campo-formulario { -fx-min-height: 70px; -fx-pref-height: 70px; }
+.estado-acceso-formulario {
+    -fx-background-color: #f4f4f4;
+    -fx-background-radius: 9px;
+    -fx-border-color: #d8d8d8;
+    -fx-border-radius: 9px;
+    -fx-padding: 8px 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #343434;
+}
+.tarjeta-administrativa { -fx-padding: 20px; }
+.permisos-consulta { -fx-background-color: #f4f4f4; }
+.boton-critico {
+    -fx-background-color: white;
+    -fx-text-fill: #111111;
+    -fx-border-color: #111111;
+    -fx-border-width: 1.5px;
+    -fx-background-radius: 9px;
+    -fx-border-radius: 9px;
+    -fx-padding: 9px 15px;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.boton-critico:hover { -fx-background-color: #e7e7e7; }
+
 .modulo-root { -fx-background-color: transparent; -fx-padding: 22px 24px 26px 24px; }
 .titulo-dashboard, .titulo-formulario { -fx-font-size: 22px; -fx-font-weight: 800; }
 .dato-dashboard { -fx-font-size: 15px; }
@@ -241,46 +295,38 @@
 .tab-pane .tab-content-area { -fx-background-color: rgba(255,255,255,0.84); -fx-background-radius: 0 12px 12px 12px; }
 
 .etiqueta-campo { -fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #555555; }
-.lector-biometrico {
-    -fx-background-color: linear-gradient(to bottom right, #ececec, #cfcfcf);
-    -fx-background-radius: 30px;
-    -fx-border-color: white;
-    -fx-border-radius: 30px;
-}
-.lector-biometrico .icono-svg { -fx-fill: #161616; }
 .segmento-huella {
     -fx-fill: transparent;
     -fx-stroke: #161616;
     -fx-stroke-width: 0.24px;
     -fx-stroke-line-cap: round;
 }
-.check-biometrico {
+.check-operacion {
     -fx-fill: transparent;
-    -fx-stroke: #2f6d43;
+    -fx-stroke: #111111;
     -fx-stroke-width: 2.4px;
     -fx-stroke-line-cap: round;
     -fx-stroke-line-join: round;
 }
-.notificacion-flotante {
+.notificacion-operacion {
     -fx-background-color: white;
-    -fx-background-radius: 12px;
-    -fx-padding: 11px 15px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.16), 16, 0.12, 0, 5);
-}
-.notificacion-titulo { -fx-font-weight: 700; }
-.notificacion-detalle { -fx-font-size: 10px; -fx-text-fill: #666666; }
-.biometria-exito { -fx-background-color: #dfe9df; }
-.biometria-error { -fx-background-color: #f1dddd; }
-.estado-biometrico { -fx-font-size: 24px; -fx-font-weight: 800; }
-.aviso-demostracion {
-    -fx-background-color: #111111;
     -fx-background-radius: 15px;
-    -fx-text-fill: white;
-    -fx-font-size: 10px;
-    -fx-font-weight: 800;
-    -fx-padding: 7px 13px;
+    -fx-border-color: #e7e7e7;
+    -fx-border-radius: 15px;
+    -fx-padding: 12px 15px;
+    -fx-min-width: 285px;
+    -fx-max-width: 340px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.17), 20, 0.13, 0, 7);
 }
-.tarjeta-biometria { -fx-max-width: 720px; -fx-alignment: center; }
+.icono-notificacion-operacion {
+    -fx-background-color: #f4f4f4;
+    -fx-background-radius: 11px;
+    -fx-min-width: 54px;
+    -fx-min-height: 54px;
+}
+.notificacion-operacion .segmento-huella { -fx-stroke-width: 0.55px; }
+.notificacion-titulo { -fx-font-weight: 700; }
+.notificacion-detalle { -fx-font-size: 11px; -fx-text-fill: #666666; -fx-max-width: 235px; }
 
 .tooltip { -fx-background-color: #111111; -fx-text-fill: white; }
 .alert .dialog-pane { -fx-background-color: white; }

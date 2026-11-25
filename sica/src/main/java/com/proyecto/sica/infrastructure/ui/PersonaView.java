@@ -4,7 +4,10 @@ import com.proyecto.sica.application.usecase.SolicitudPersona;
 import com.proyecto.sica.domain.entity.Empresa;
 import com.proyecto.sica.domain.entity.Persona;
 import com.proyecto.sica.domain.entity.TipoPersona;
+import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
+import java.util.function.Consumer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -45,14 +48,16 @@ public final class PersonaView {
 
     private void construir() {
         root.getStyleClass().add("modulo-root");
-        Label titulo = new Label("Gestion de personas");
-        titulo.getStyleClass().add("titulo-dashboard");
         buscarDocumentoField.setPromptText("Numero de documento");
         Button buscarButton = new Button("Buscar documento");
         buscarButton.getStyleClass().add("boton-neutro");
         buscarButton.setOnAction(evento -> onBuscar.run());
-        HBox cabecera = new HBox(10, titulo, buscarDocumentoField, buscarButton);
-        cabecera.getStyleClass().add("barra-modulo");
+        HBox filtros = new HBox(10, buscarDocumentoField, buscarButton);
+        filtros.getStyleClass().add("panel-filtros");
+        VBox cabecera = new VBox(16,
+                new EncabezadoModulo("Gestion de personas",
+                        "Consulta y administra trabajadores e invitados.", TipoIcono.PERSONAS),
+                filtros);
 
         agregarColumna("Documento", persona -> persona.getTipoDocumento()
                 + " " + persona.getNumeroDocumento(), 145);
@@ -69,33 +74,46 @@ public final class PersonaView {
         tipoPersonaCombo.setValue(TipoPersona.VISITANTE);
         empresaCombo.setPromptText("Sin empresa");
         GridPane formulario = new GridPane();
-        formulario.setHgap(10);
-        formulario.setVgap(9);
-        formulario.addRow(0, new Label("Tipo"), tipoPersonaCombo);
-        formulario.addRow(1, new Label("Empresa"), empresaCombo);
-        formulario.addRow(2, new Label("Tipo documento"), tipoDocumentoField);
-        formulario.addRow(3, new Label("Numero"), numeroDocumentoField);
-        formulario.addRow(4, new Label("Nombres"), nombresField);
-        formulario.addRow(5, new Label("Apellidos"), apellidosField);
-        formulario.addRow(6, new Label("Telefono"), telefonoField);
-        formulario.addRow(7, new Label("Correo"), correoField);
-        formulario.addRow(8, new Label("Foto URL"), fotoUrlField);
-        estadoLabel.getStyleClass().add("texto-secundario");
+        formulario.getStyleClass().add("formulario-administrativo");
+        formulario.setHgap(12);
+        formulario.setVgap(12);
+        agregarCampo(formulario, 0, "Tipo", tipoPersonaCombo);
+        agregarCampo(formulario, 1, "Empresa", empresaCombo);
+        agregarCampo(formulario, 2, "Tipo documento", tipoDocumentoField);
+        agregarCampo(formulario, 3, "Numero", numeroDocumentoField);
+        agregarCampo(formulario, 4, "Nombres", nombresField);
+        agregarCampo(formulario, 5, "Apellidos", apellidosField);
+        agregarCampo(formulario, 6, "Telefono", telefonoField);
+        agregarCampo(formulario, 7, "Correo", correoField);
+        agregarCampo(formulario, 8, "Foto URL", fotoUrlField);
+        estadoLabel.getStyleClass().add("estado-acceso-formulario");
         crearButton.getStyleClass().add("boton-principal");
         actualizarButton.getStyleClass().add("boton-neutro");
         crearButton.setOnAction(evento -> onCrear.run());
         actualizarButton.setOnAction(evento -> onActualizar.run());
-        VBox tarjeta = new VBox(12, new Label("Datos de la persona"), formulario,
+        Label tituloFormulario = new Label("Datos de la persona");
+        tituloFormulario.getStyleClass().add("titulo-formulario-interno");
+        VBox tarjeta = new VBox(16, tituloFormulario, formulario,
                 estadoLabel, new HBox(10, crearButton, actualizarButton));
-        tarjeta.getStyleClass().add("tarjeta-modulo");
-        tarjeta.setPadding(new Insets(18));
-        tarjeta.setPrefWidth(390);
+        tarjeta.getStyleClass().add("tarjeta-formulario");
+        tarjeta.setPrefWidth(380);
+        tarjeta.setMinWidth(330);
 
         root.setTop(cabecera);
         root.setCenter(tabla);
         root.setRight(tarjeta);
-        BorderPane.setMargin(tabla, new Insets(16));
-        BorderPane.setMargin(tarjeta, new Insets(16, 16, 16, 0));
+        BorderPane.setMargin(tabla, new Insets(16, 14, 0, 0));
+        BorderPane.setMargin(tarjeta, new Insets(16, 0, 0, 0));
+    }
+
+    private void agregarCampo(GridPane formulario, int fila, String texto,
+            javafx.scene.control.Control control) {
+        Label etiqueta = new Label(texto);
+        etiqueta.getStyleClass().add("etiqueta-campo");
+        control.getStyleClass().add("campo-formulario");
+        control.setMaxWidth(Double.MAX_VALUE);
+        formulario.addRow(fila, etiqueta, control);
+        GridPane.setHgrow(control, javafx.scene.layout.Priority.ALWAYS);
     }
 
     private void agregarColumna(String titulo,
@@ -124,10 +142,12 @@ public final class PersonaView {
     private Runnable onCrear = () -> { };
     private Runnable onActualizar = () -> { };
     private Runnable onBuscar = () -> { };
+    private Consumer<String> onConfirmacion = mensaje -> { };
 
     public void alCrear(Runnable accion) { onCrear = accion; }
     public void alActualizar(Runnable accion) { onActualizar = accion; }
     public void alBuscar(Runnable accion) { onBuscar = accion; }
+    public void alConfirmar(Consumer<String> accion) { onConfirmacion = accion; }
     public Parent getRoot() { return root; }
     public Persona getSeleccionada() { return tabla.getSelectionModel().getSelectedItem(); }
     public String getDocumentoBusqueda() { return buscarDocumentoField.getText(); }
@@ -155,7 +175,7 @@ public final class PersonaView {
     public void permitirCrear(boolean permitido) { crearButton.setDisable(!permitido); }
     public void permitirActualizar(boolean permitido) { actualizarButton.setDisable(!permitido); }
     public void mostrarError(String mensaje) { alerta(Alert.AlertType.ERROR, mensaje); }
-    public void mostrarInformacion(String mensaje) { alerta(Alert.AlertType.INFORMATION, mensaje); }
+    public void mostrarInformacion(String mensaje) { onConfirmacion.accept(mensaje); }
     private void alerta(Alert.AlertType tipo, String mensaje) {
         Alert alerta = new Alert(tipo, mensaje);
         alerta.setHeaderText(null);

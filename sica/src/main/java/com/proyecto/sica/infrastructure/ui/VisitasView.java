@@ -4,8 +4,11 @@ import com.proyecto.sica.domain.entity.Empresa;
 import com.proyecto.sica.domain.entity.Persona;
 import com.proyecto.sica.domain.entity.Usuario;
 import com.proyecto.sica.domain.entity.Visita;
+import com.proyecto.sica.infrastructure.ui.components.EncabezadoModulo;
+import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Consumer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -31,6 +34,7 @@ import javafx.scene.layout.VBox;
 /** Vista desacoplada para guarda, funcionario e historial de visitas. */
 public final class VisitasView {
     private final BorderPane root = new BorderPane();
+    private final VBox encabezadoContexto = new VBox();
     private final TextField tipoDocumentoField = new TextField("CC");
     private final TextField documentoField = new TextField();
     private final Label personaLabel = new Label("Persona: sin seleccionar");
@@ -72,8 +76,7 @@ public final class VisitasView {
 
     private void construir() {
         root.getStyleClass().add("modulo-root");
-        Label titulo = new Label("Control de visitas");
-        titulo.getStyleClass().add("titulo-dashboard");
+        mostrarEncabezadoControl();
         documentoField.setPromptText("Numero de documento");
         Button buscarButton = new Button("Buscar persona");
         buscarButton.getStyleClass().add("boton-neutro");
@@ -82,9 +85,10 @@ public final class VisitasView {
         fotoView.setFitHeight(54);
         fotoView.setPreserveRatio(true);
         VBox datos = new VBox(3, personaLabel, accesoLabel, fotoLabel);
-        HBox cabecera = new HBox(10, titulo, tipoDocumentoField, documentoField,
+        HBox busqueda = new HBox(10, tipoDocumentoField, documentoField,
                 buscarButton, fotoView, datos);
-        cabecera.getStyleClass().add("barra-modulo");
+        busqueda.getStyleClass().add("panel-filtros");
+        VBox cabecera = new VBox(16, encabezadoContexto, busqueda);
 
         construirGuarda();
         construirFuncionario();
@@ -247,11 +251,14 @@ public final class VisitasView {
     }
 
     public void mostrarPanelControl() {
+        mostrarEncabezadoControl();
         if (!guardaTab.isDisable()) tabs.getSelectionModel().select(guardaTab);
         else if (!estadosTab.isDisable()) tabs.getSelectionModel().select(estadosTab);
     }
 
     public void mostrarPanelVisitas() {
+        encabezadoContexto.getChildren().setAll(new EncabezadoModulo("Gestion de visitas",
+                "Administra prerregistros, solicitudes y aprobaciones.", TipoIcono.VISITAS));
         if (!funcionarioTab.isDisable()) tabs.getSelectionModel().select(funcionarioTab);
         else if (!historialTab.isDisable()) tabs.getSelectionModel().select(historialTab);
         else tabs.getSelectionModel().select(guardaTab);
@@ -268,6 +275,7 @@ public final class VisitasView {
     private Runnable onAprobar = () -> { };
     private Runnable onRechazar = () -> { };
     private Runnable onHistorial = () -> { };
+    private Consumer<String> onConfirmacion = mensaje -> { };
     public void alBuscarPersona(Runnable a) { onBuscarPersona = a; }
     public void alSeleccionarEmpresa(Runnable a) { onEmpresaSeleccionada = a; }
     public void alNoAnunciada(Runnable a) { onNoAnunciada = a; }
@@ -279,9 +287,16 @@ public final class VisitasView {
     public void alAprobar(Runnable a) { onAprobar = a; }
     public void alRechazar(Runnable a) { onRechazar = a; }
     public void alConsultarHistorial(Runnable a) { onHistorial = a; }
+    public void alConfirmar(Consumer<String> accion) { onConfirmacion = accion; }
 
     public void mostrarError(String mensaje) { alerta(Alert.AlertType.ERROR, mensaje); }
-    public void mostrarInformacion(String mensaje) { alerta(Alert.AlertType.INFORMATION, mensaje); }
+    public void mostrarInformacion(String mensaje) { onConfirmacion.accept(mensaje); }
+
+    private void mostrarEncabezadoControl() {
+        encabezadoContexto.getChildren().setAll(new EncabezadoModulo("Control de acceso",
+                "Gestiona entradas, salidas y autorizaciones del complejo.",
+                TipoIcono.CONTROL_ACCESO));
+    }
     private void alerta(Alert.AlertType tipo, String mensaje) {
         Alert alerta = new Alert(tipo, mensaje);
         alerta.setTitle("SICA");
