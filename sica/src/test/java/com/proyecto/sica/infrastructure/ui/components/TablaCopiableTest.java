@@ -12,7 +12,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.ComboBox;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -22,16 +21,15 @@ class TablaCopiableTest {
     static void iniciarJavaFx() throws InterruptedException {
         CountDownLatch inicio = new CountDownLatch(1);
         try {
-            Platform.startup(inicio::countDown);
+            Platform.startup(() -> {
+                Platform.setImplicitExit(false);
+                inicio.countDown();
+            });
             inicio.await();
         } catch (IllegalStateException yaIniciado) {
             // Otra prueba puede haber iniciado JavaFX en la misma JVM.
+            Platform.setImplicitExit(false);
         }
-    }
-
-    @AfterAll
-    static void cerrarJavaFx() {
-        Platform.exit();
     }
 
     @Test

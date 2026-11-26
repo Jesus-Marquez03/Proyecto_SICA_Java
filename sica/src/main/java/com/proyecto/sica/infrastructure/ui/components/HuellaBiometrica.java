@@ -6,6 +6,7 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.scene.Group;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.SVGPath;
 import javafx.util.Duration;
@@ -17,24 +18,36 @@ public final class HuellaBiometrica extends Pane {
     private static final double LONGITUD_TRAZO = 190;
 
     /*
-     * Las rutas comparten un sistema de coordenadas de 60 x 70. Esto evita
-     * escalados y desplazamientos externos que alteren los limites del nodo.
+     * Las rutas comparten un sistema de coordenadas de 60 x 70. El grupo aplica
+     * solo la proporcion horizontal medida en la referencia y conserva el centro.
      */
     private static final String[] CRESTAS = {
-        "M8 60C3 49 4 31 10 19C15 9 22 4 30 4C44 4 55 17 56 32C57 46 52 58 45 65",
-        "M13 62C8 52 9 36 13 23C17 14 23 9 31 9C42 9 50 19 51 32C52 43 48 54 41 61",
-        "M18 64C13 55 14 40 18 27C21 18 25 14 32 14C41 14 46 22 47 33C48 41 45 49 39 56",
-        "M23 65C18 57 19 44 22 31C24 23 28 19 33 19C40 19 43 25 43 33C44 38 42 44 38 48",
-        "M33 24C29 24 27 27 27 31C27 35 30 37 34 37C40 37 44 42 44 49C44 57 39 64 33 67",
-        "M34 29C32 29 32 31 34 32C43 33 49 40 49 49C49 59 43 67 36 69",
-        "M22 36C21 44 24 49 30 51C35 53 37 57 36 61",
-        "M17 34C16 46 20 54 27 57C31 59 32 62 31 66",
-        "M12 31C11 45 16 56 24 61",
-        "M18 10C21 7 25 6 29 6",
-        "M22 15C25 12 29 11 33 12"
+        // Arcos superiores cortos y separados de la referencia.
+        "M22 4C27 2.5 33 2.5 38 4",
+        "M17 7.5C24 4.5 36 4.5 43 8",
+        "M13 12C22 7.5 38 7.5 47 13",
+        "M10 17C20 10.5 39 10.5 50 18",
+
+        // Retornos inferiores concentricos que completan la silueta alargada.
+        "M8 22C4 34 5 48 12 58C20 68 35 70 46 63C53 58 56 50 55 42",
+        "M12 24C8 34 9 46 15 54C22 63 35 66 44 60C51 55 53 46 50 38",
+        "M16 26C12 35 13 44 18 50C23 57 33 60 41 55C47 51 48 44 45 38",
+
+        // Crestas superiores que rodean el primer giro de la S.
+        "M51 31C47 20 36 15 25 17C15 19 10 27 11 37",
+        "M47 30C43 22 35 18 27 20C18 22 14 29 16 36C18 43 25 47 33 46",
+        "M43 31C40 25 33 22 27 23C21 24 18 28 19 33C20 38 25 41 31 40C37 39 42 42 43 47C44 52 40 57 35 59",
+
+        // Nucleo en S y sus retornos paralelos, como en el fotograma original.
+        "M40 29C37 26 31 25 27 27C23 29 23 33 26 35C29 37 35 36 39 38C45 40 47 46 45 52C42 59 34 63 26 61C19 60 14 55 12 49",
+        "M37 31C34 29 29 29 27 30C25 31 26 33 28 33C34 33 40 34 43 39C47 45 45 52 40 57C34 62 24 61 18 55",
+        "M34 36C40 36 43 39 44 43",
+        "M39 43C41 47 39 51 35 53C30 56 23 54 20 50",
+        "M34 47C31 50 26 50 23 48"
     };
 
     private final List<SVGPath> segmentos = new ArrayList<>();
+    private final Group dibujo = new Group();
     private Timeline revelado;
 
     public HuellaBiometrica() {
@@ -49,8 +62,11 @@ public final class HuellaBiometrica extends Pane {
             segmento.getStyleClass().add("segmento-huella");
             segmento.getStrokeDashArray().setAll(LONGITUD_TRAZO, LONGITUD_TRAZO);
             segmentos.add(segmento);
-            getChildren().add(segmento);
+            dibujo.getChildren().add(segmento);
         }
+        // La referencia mide aproximadamente 0,62 veces su alto.
+        dibujo.setScaleX(0.82);
+        getChildren().add(dibujo);
         reiniciar();
     }
 

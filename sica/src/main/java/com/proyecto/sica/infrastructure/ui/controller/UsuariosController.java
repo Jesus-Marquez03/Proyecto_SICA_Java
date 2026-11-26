@@ -54,26 +54,32 @@ public final class UsuariosController {
     }
 
     private void crear() {
-        ejecutar(() -> crear.ejecutar(actor, vista.solicitudCrear()));
+        ejecutar(() -> crear.ejecutar(actor, vista.solicitudCrear()),
+                "Usuario creado correctamente");
     }
 
     private void actualizar() {
         if (vista.seleccionado() == null) { vista.error("Selecciona un usuario"); return; }
-        ejecutar(() -> actualizar.ejecutar(actor, vista.solicitudActualizar()));
+        ejecutar(() -> actualizar.ejecutar(actor, vista.solicitudActualizar()),
+                "Usuario actualizado correctamente");
     }
 
     private void cambiarEstado() {
         Usuario seleccionado = vista.seleccionado();
         if (seleccionado == null) { vista.error("Selecciona un usuario"); return; }
+        boolean activar = !seleccionado.isActivo();
         ejecutar(() -> {
-            cambiarEstado.ejecutar(actor, seleccionado.getId(), !seleccionado.isActivo());
+            cambiarEstado.ejecutar(actor, seleccionado.getId(), activar);
             return seleccionado;
-        });
+        }, activar ? "Usuario activado correctamente" : "Usuario desactivado correctamente");
     }
 
-    private void ejecutar(java.util.concurrent.Callable<Usuario> operacion) {
+    private void ejecutar(java.util.concurrent.Callable<Usuario> operacion, String mensajeExito) {
         vista.cargando();
-        EjecutorTareasUi.ejecutar(operacion, resultado -> cargar(), this::error);
+        EjecutorTareasUi.ejecutar(operacion, resultado -> {
+            vista.mostrarConfirmacion(mensajeExito);
+            cargar();
+        }, this::error);
     }
 
     private boolean tiene(String permiso) { return actor.getRol().tienePermiso(permiso); }
