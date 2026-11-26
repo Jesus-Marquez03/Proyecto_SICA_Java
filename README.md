@@ -4,7 +4,7 @@ Proyecto academico en Java para controlar el acceso a Zona Acme. La sexta etapa 
 
 ## Tecnologias
 
-- JDK 21, compilando con `--release 17`.
+- JDK 17 o superior (probado con JDK 21), compilando con `--release 17`.
 - Maven.
 - MySQL 8.4 y JDBC con MySQL Connector/J 9.2.0.
 - JavaFX 17.0.17 y su plugin Maven oficial.
@@ -29,33 +29,169 @@ El paquete base es `com.proyecto.sica`:
 
 La interfaz llama servicios y casos de uso; nunca ejecuta SQL directamente.
 
-## 1. Configurar el entorno
+## Inicio automatico habitual
 
-Desde la raiz del repositorio:
+Despues de preparar el equipo una sola vez, ejecute desde cualquier directorio:
 
-```powershell
-Copy-Item .env.example .env
-code .env
-```
-
-Cambie las claves del archivo local. `.env` esta ignorado por Git. Para ejecutar Java, defina en la terminal la misma configuracion:
+Windows 11:
 
 ```powershell
-$env:SICA_DB_HOST = "localhost"
-$env:SICA_DB_PORT = "3307"
-$env:SICA_DB_NAME = "sica_db"
-$env:SICA_DB_USER = "sica_app"
-$env:SICA_DB_PASSWORD = "su_clave_local"
+& "C:\ruta\al\proyecto\iniciar-sica.ps1"
 ```
 
-## 2. Iniciar MySQL y aplicar las migraciones
+Si la terminal ya esta ubicada en la raiz del repositorio:
 
 ```powershell
-docker compose up -d
-docker compose ps
+.\iniciar-sica.ps1
 ```
 
-Un volumen nuevo ejecuta automaticamente esquema, datos y migracion. Para una base creada en la etapa anterior, ejecute una vez:
+Linux:
+
+```bash
+bash "/ruta/al/proyecto/iniciar-sica.sh"
+```
+
+El iniciador localiza la raiz del repositorio, lee `.env`, configura las variables
+solo para sus procesos hijos, comprueba Java, Maven, Docker y Compose, inicia el
+servicio `mysql`, espera su estado `healthy`, verifica JDBC y abre JavaFX. Al
+cerrar SICA, MySQL y su volumen permanecen activos. No se solicitan contrasenas
+en el inicio habitual y no se modifican variables globales del sistema.
+
+Para comprobar requisitos, Docker y JDBC sin abrir la interfaz:
+
+```powershell
+.\iniciar-sica.ps1 -SoloVerificar
+```
+
+```bash
+bash iniciar-sica.sh --solo-verificar
+```
+
+## Primera instalacion en Windows
+
+1. Instale o compruebe JDK 17 o superior, Maven, Docker Desktop y Docker Compose:
+
+   ```powershell
+   java -version
+   mvn --version
+   docker version
+   docker compose version
+   ```
+
+   El script usa `mvn` del `PATH`. Si no esta disponible, tambien busca
+   `MAVEN_HOME` y las ubicaciones habituales de Maven en Windows.
+
+2. Desde la raiz del repositorio cree la configuracion local:
+
+   ```powershell
+   Copy-Item .env.example .env
+   notepad .env
+   ```
+
+3. Cambie ambas contrasenas de ejemplo y conserve `SICA_DB_HOST=localhost` y el
+   puerto publicado `3307`, salvo que su entorno requiera otro puerto.
+
+4. Inicie Docker Desktop y valide todo:
+
+   ```powershell
+   .\iniciar-sica.ps1 -SoloVerificar
+   ```
+
+5. En una base nueva, cree de forma explicita los usuarios y datos academicos.
+   Esta opcion es idempotente y no se ejecuta en los inicios normales:
+
+   ```powershell
+   .\iniciar-sica.ps1 -InicializarDemo
+   ```
+
+Si la politica local impide ejecutar scripts y el administrador lo permite,
+puede habilitar scripts locales una sola vez para su usuario:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+En un equipo administrado donde no pueda cambiar esa politica, utilice
+`powershell.exe -ExecutionPolicy Bypass -File .\iniciar-sica.ps1`; esta
+excepcion se limita al proceso actual.
+
+## Primera instalacion en Linux
+
+1. Compruebe JDK 17 o superior, Maven, Docker Engine y el complemento Compose:
+
+   ```bash
+   java -version
+   mvn --version
+   docker version
+   docker compose version
+   ```
+
+   El script no usa `sudo`. Si Docker responde con permiso denegado, solicite al
+   administrador que habilite su usuario para utilizar Docker o siga la politica
+   de la universidad.
+
+2. Cree el archivo local de configuracion:
+
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+
+3. Compruebe el arranque y JDBC:
+
+   ```bash
+   bash iniciar-sica.sh --solo-verificar
+   ```
+
+4. Inicialice una sola vez los usuarios y datos academicos:
+
+   ```bash
+   bash iniciar-sica.sh --inicializar-demo
+   ```
+
+5. Para los siguientes inicios use solamente:
+
+   ```bash
+   bash iniciar-sica.sh
+   ```
+
+El archivo se versiona con finales de linea LF. Opcionalmente puede hacerlo
+ejecutable con `chmod +x iniciar-sica.sh`. JavaFX requiere una sesion grafica
+X11 o Wayland y las bibliotecas nativas habituales de GTK 3. Maven descarga los
+artefactos JavaFX apropiados para el sistema operativo; el proyecto no incluye
+binarios JavaFX exclusivos de Windows.
+
+## Configuracion local y seguridad
+
+`.env` esta ignorado por Git. Los iniciadores interpretan unicamente:
+
+- `SICA_DB_HOST`
+- `SICA_DB_PORT`
+- `SICA_DB_NAME`
+- `SICA_DB_USER`
+- `SICA_DB_PASSWORD`
+- `SICA_DB_ROOT_PASSWORD`
+- `SICA_DB_URL`, solamente si se agrega como URL JDBC opcional.
+
+No se ejecuta `.env` como codigo, no se utiliza `eval` y las contrasenas no se
+incluyen en argumentos de procesos ni se imprimen. Se aceptan valores sin
+comillas o encerrados entre comillas simples o dobles. Las variables se exportan
+unicamente al proceso de Docker/Maven iniciado por el script, por eso no
+desaparecen como requisito cuando se reinicia el computador: se vuelven a cargar
+automaticamente en cada ejecucion.
+
+Si `.env` falta, el iniciador se detiene y solicita copiar `.env.example`; nunca
+sobrescribe una configuracion existente.
+
+## MySQL, esquema y migraciones
+
+En una instalacion nueva, `docker compose up` crea el volumen
+`sica_mysql_data`. MySQL ejecuta automaticamente, en orden, `schema.sql`,
+`data.sql` y todas las migraciones montadas en `docker-entrypoint-initdb.d`.
+Estos archivos solo se ejecutan automaticamente cuando el volumen esta vacio.
+
+Para una base creada con una version anterior, aplique una sola vez las
+migraciones que le falten:
 
 ```powershell
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/03-usuarios-seguridad.sql'
@@ -65,35 +201,40 @@ docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /doc
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/07-reportes.sql'
 ```
 
-Las migraciones son repetibles. La sexta agrega cuatro indices de fecha usados por reportes; no crea tablas, borra datos ni reemplaza registros existentes.
-
-Para detener MySQL conservando los datos:
+El iniciador nunca elimina contenedores, volúmenes o datos y no vuelve a aplicar
+el esquema en cada arranque. Para detener MySQL conservando el volumen:
 
 ```powershell
 docker compose stop
 ```
 
-No use `docker compose down -v` si desea conservar la base.
+No use `docker compose down -v` si desea conservar la base. Un volumen de Docker
+en Windows no se transfiere automaticamente al computador Linux; cada equipo
+tiene datos locales independientes.
 
-## 3. Compilar y probar
+## Compilar, probar y ejecutar manualmente
 
-Ejecute Maven desde `sica`, donde se encuentra `pom.xml`:
+Maven se ejecuta desde `sica`, donde se encuentra `pom.xml`:
 
 ```powershell
 cd sica
 mvn clean compile
 mvn test
+mvn exec:java "-Dexec.args=--verificar-conexion"
+mvn javafx:run
 ```
 
-La prueba de integracion con MySQL se ejecuta de forma explicita y requiere el contenedor y las variables anteriores:
+La prueba de integracion MySQL es explicita y escribe datos controlados:
 
 ```powershell
 mvn "-Dtest=SeguridadMysqlIT,PersonasEmpresasMysqlIT,ControlVisitasMysqlIT,IncidentesAuditoriaMysqlIT,ReportesMysqlIT" test
 ```
 
-## 4. Inicializar usuarios academicos
+## Usuarios academicos
 
-La inicializacion genera hashes seguros, visitas y tres incidentes ficticios. No reemplaza registros existentes:
+La inicializacion genera hashes seguros, visitas y tres incidentes ficticios sin
+reemplazar usuarios existentes. Tambien puede ejecutarse manualmente desde
+`sica` cuando las variables ya esten configuradas:
 
 ```powershell
 mvn exec:java "-Dexec.args=--inicializar-demo"
@@ -110,7 +251,7 @@ Credenciales exclusivas para desarrollo academico local:
 
 Estas contrasenas son publicas y deliberadamente de demostracion. No deben reutilizarse ni sustituir credenciales reales.
 
-## 5. Abrir JavaFX
+## Abrir JavaFX manualmente
 
 ```powershell
 mvn javafx:run
