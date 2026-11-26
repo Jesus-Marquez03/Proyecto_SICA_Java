@@ -2,74 +2,99 @@ package com.proyecto.sica.infrastructure.ui.components;
 
 import java.util.ArrayList;
 import java.util.List;
-import javafx.animation.FadeTransition;
-import javafx.animation.SequentialTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.SVGPath;
 import javafx.util.Duration;
 
-/** Huella formada por crestas SVG independientes para revelar cada segmento. */
+/** Huella vectorial completa cuyas crestas se dibujan progresivamente. */
 public final class HuellaBiometrica extends Pane {
+    private static final double ANCHO = 60;
+    private static final double ALTO = 70;
+    private static final double LONGITUD_TRAZO = 190;
+
+    /*
+     * Las rutas comparten un sistema de coordenadas de 60 x 70. Esto evita
+     * escalados y desplazamientos externos que alteren los limites del nodo.
+     */
     private static final String[] CRESTAS = {
-        "M12 2C6.5 2 2.5 6.3 2.5 11.5C2.5 15.8 1.7 18.5 0.5 21",
-        "M12 4.2C16.5 4.2 20 7.7 20 12C20 16.4 18.6 19.3 16.4 22",
-        "M12 6.2C8.7 6.2 6 8.8 6 12C6 15.7 5 18.2 3.5 20.2",
-        "M12 8.2C14.2 8.2 16 10 16 12.2C16 16.3 14.8 19.2 12.4 21.8",
-        "M9.2 11.2C9.2 15 8.4 17.4 6.8 19.4",
-        "M12 10.4V13.2C12 16.2 11.4 18 10 19.8"
+        "M8 60C3 49 4 31 10 19C15 9 22 4 30 4C44 4 55 17 56 32C57 46 52 58 45 65",
+        "M13 62C8 52 9 36 13 23C17 14 23 9 31 9C42 9 50 19 51 32C52 43 48 54 41 61",
+        "M18 64C13 55 14 40 18 27C21 18 25 14 32 14C41 14 46 22 47 33C48 41 45 49 39 56",
+        "M23 65C18 57 19 44 22 31C24 23 28 19 33 19C40 19 43 25 43 33C44 38 42 44 38 48",
+        "M33 24C29 24 27 27 27 31C27 35 30 37 34 37C40 37 44 42 44 49C44 57 39 64 33 67",
+        "M34 29C32 29 32 31 34 32C43 33 49 40 49 49C49 59 43 67 36 69",
+        "M22 36C21 44 24 49 30 51C35 53 37 57 36 61",
+        "M17 34C16 46 20 54 27 57C31 59 32 62 31 66",
+        "M12 31C11 45 16 56 24 61",
+        "M18 10C21 7 25 6 29 6",
+        "M22 15C25 12 29 11 33 12"
     };
 
     private final List<SVGPath> segmentos = new ArrayList<>();
-    private SequentialTransition revelado;
+    private Timeline revelado;
 
     public HuellaBiometrica() {
-        this(7.2, 190, 215);
-    }
+        setMinSize(ANCHO, ALTO);
+        setPrefSize(ANCHO, ALTO);
+        setMaxSize(ANCHO, ALTO);
+        setPickOnBounds(false);
 
-    /** Crea una huella compacta para componentes que no requieren el lector grande. */
-    public static HuellaBiometrica compacta() {
-        return new HuellaBiometrica(1.75, 48, 52);
-    }
-
-    private HuellaBiometrica(double escala, double ancho, double alto) {
-        setMinSize(ancho, alto);
-        setPrefSize(ancho, alto);
-        setMaxSize(ancho, alto);
         for (String cresta : CRESTAS) {
             SVGPath segmento = new SVGPath();
             segmento.setContent(cresta);
             segmento.getStyleClass().add("segmento-huella");
-            segmento.setScaleX(escala);
-            segmento.setScaleY(escala);
-            segmento.setLayoutX(escala > 2 ? 10 : 4);
-            segmento.setLayoutY(escala > 2 ? 15 : 5);
+            segmento.getStrokeDashArray().setAll(LONGITUD_TRAZO, LONGITUD_TRAZO);
             segmentos.add(segmento);
             getChildren().add(segmento);
         }
+        reiniciar();
+    }
+
+    /** Crea la huella de la notificacion con limites fijos y sin escalado externo. */
+    public static HuellaBiometrica compacta() {
+        return new HuellaBiometrica();
     }
 
     public void reiniciar() {
         detener();
-        segmentos.forEach(segmento -> segmento.setOpacity(0.22));
+        setOpacity(1);
+        setScaleX(1);
+        setScaleY(1);
+        segmentos.forEach(segmento -> {
+            segmento.setOpacity(1);
+            segmento.setStrokeDashOffset(LONGITUD_TRAZO);
+        });
     }
 
     public void mostrarCompleta() {
-        segmentos.forEach(segmento -> segmento.setOpacity(1));
+        segmentos.forEach(segmento -> segmento.setStrokeDashOffset(0));
     }
 
+    /** Dibuja las crestas con un pequeno desfase para imitar el escaneo. */
     public void revelar() {
         detener();
-        revelado = new SequentialTransition();
-        for (SVGPath segmento : segmentos) {
-            FadeTransition transicion = new FadeTransition(Duration.millis(220), segmento);
-            transicion.setFromValue(0.22);
-            transicion.setToValue(1);
-            revelado.getChildren().add(transicion);
+        revelado = new Timeline();
+        for (int indice = 0; indice < segmentos.size(); indice++) {
+            SVGPath segmento = segmentos.get(indice);
+            double inicio = indice * 24.0;
+            revelado.getKeyFrames().addAll(
+                    new KeyFrame(Duration.millis(inicio),
+                            new KeyValue(segmento.strokeDashOffsetProperty(), LONGITUD_TRAZO)),
+                    new KeyFrame(Duration.millis(inicio + 480),
+                            new KeyValue(segmento.strokeDashOffsetProperty(), 0,
+                                    Interpolator.EASE_BOTH)));
         }
-        revelado.play();
+        revelado.playFromStart();
     }
 
     public void detener() {
-        if (revelado != null) revelado.stop();
+        if (revelado != null) {
+            revelado.stop();
+            revelado = null;
+        }
     }
 }

@@ -48,9 +48,7 @@ public final class DashboardView {
         aplicacion.setLeft(crearBarraLateral(usuario, alCerrarSesion));
         aplicacion.setCenter(crearAreaPrincipal(usuario));
         StackPane.setMargin(aplicacion, new Insets(22));
-        StackPane.setAlignment(notificacion, Pos.TOP_RIGHT);
-        StackPane.setMargin(notificacion, new Insets(104, 44, 0, 0));
-        root.getChildren().addAll(fondo, aplicacion, notificacion);
+        root.getChildren().addAll(fondo, aplicacion);
     }
 
     private Node crearBarraLateral(Usuario usuario, Runnable alCerrarSesion) {
@@ -116,8 +114,13 @@ public final class DashboardView {
         contenido.setFitToHeight(true);
         contenido.setPannable(true);
         contenido.getStyleClass().add("scroll-contenido");
-        VBox.setVgrow(contenido, Priority.ALWAYS);
-        VBox area = new VBox(encabezado, contenido);
+
+        StackPane contenidoSuperpuesto = new StackPane(contenido, notificacion);
+        StackPane.setAlignment(notificacion, Pos.TOP_RIGHT);
+        StackPane.setMargin(notificacion, new Insets(22, 22, 0, 0));
+        VBox.setVgrow(contenidoSuperpuesto, Priority.ALWAYS);
+
+        VBox area = new VBox(encabezado, contenidoSuperpuesto);
         area.getStyleClass().add("area-principal");
         return area;
     }
