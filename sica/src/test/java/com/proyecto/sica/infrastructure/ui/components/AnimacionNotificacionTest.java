@@ -14,12 +14,16 @@ import javax.imageio.ImageIO;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.SVGPath;
 import javafx.util.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,10 +35,14 @@ class AnimacionNotificacionTest {
     static void iniciarJavaFx() throws InterruptedException {
         CountDownLatch inicio = new CountDownLatch(1);
         try {
-            Platform.startup(inicio::countDown);
+            Platform.startup(() -> {
+                Platform.setImplicitExit(false);
+                inicio.countDown();
+            });
             inicio.await();
         } catch (IllegalStateException yaIniciado) {
             // El toolkit puede estar activo por otra prueba JavaFX.
+            Platform.setImplicitExit(false);
         }
     }
 
@@ -74,6 +82,52 @@ class AnimacionNotificacionTest {
 
             notificacion.detener();
             assertFalse(notificacion.isVisible());
+            return null;
+        });
+        Platform.runLater(prueba);
+        prueba.get();
+    }
+
+    @Test
+    void huellaPermaneceCompletaDentroDeLaRegionYComparteCentroConCheck() throws Exception {
+        FutureTask<Void> prueba = new FutureTask<>(() -> {
+            HuellaBiometrica huella = HuellaBiometrica.compacta();
+            huella.mostrarCompleta();
+            StackPane region = new StackPane(huella);
+            region.setMinSize(68, 68);
+            region.setPrefSize(68, 68);
+            region.setMaxSize(68, 68);
+            StackPane rootHuella = new StackPane(region);
+            Scene escenaHuella = new Scene(rootHuella, 120, 120);
+            escenaHuella.getStylesheets().add(
+                    getClass().getResource("/styles/sica.css").toExternalForm());
+            rootHuella.applyCss();
+            rootHuella.layout();
+
+            Group dibujo = (Group) huella.getChildren().get(0);
+            assertTrue(dibujo.getChildren().size() >= 15);
+            Bounds limites = dibujo.getBoundsInParent();
+            assertTrue(limites.getMinX() >= 0 && limites.getMaxX() <= 60,
+                    "La huella excede el ancho asignado");
+            assertTrue(limites.getMinY() >= 0 && limites.getMaxY() <= 70,
+                    "La huella excede el alto asignado");
+
+            NotificacionOperacion notificacion = new NotificacionOperacion();
+            StackPane rootNotificacion = new StackPane(notificacion);
+            Scene escenaNotificacion = new Scene(rootNotificacion, 520, 180);
+            escenaNotificacion.getStylesheets().add(
+                    getClass().getResource("/styles/sica.css").toExternalForm());
+            rootNotificacion.applyCss();
+            rootNotificacion.layout();
+
+            HBox tarjeta = notificacion;
+            StackPane icono = (StackPane) tarjeta.getChildren().get(0);
+            HuellaBiometrica huellaTarjeta = (HuellaBiometrica) icono.getChildren().get(0);
+            SVGPath check = (SVGPath) icono.getChildren().get(1);
+            Bounds limitesHuella = huellaTarjeta.getBoundsInParent();
+            Bounds limitesCheck = check.getBoundsInParent();
+            assertEquals(limitesHuella.getCenterX(), limitesCheck.getCenterX(), 0.2);
+            assertEquals(limitesHuella.getCenterY(), limitesCheck.getCenterY(), 0.2);
             return null;
         });
         Platform.runLater(prueba);
