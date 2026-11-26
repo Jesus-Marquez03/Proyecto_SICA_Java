@@ -49,9 +49,12 @@ public final class EstadoAccesoController {
         EjecutorTareasUi.ejecutar(
                 () -> cambiarEstado.ejecutar(usuario, persona.getId(), estado.getId()),
                 cambioRealizado -> {
-                    vista.mostrarInformacion(cambioRealizado
-                            ? "Estado de acceso actualizado"
-                            : "La persona ya tenia ese estado; no se realizaron cambios");
+                    if (cambioRealizado) {
+                        vista.mostrarConfirmacion("Estado de acceso actualizado");
+                    } else {
+                        vista.mostrarInformacion(
+                                "La persona ya tenia ese estado; no se realizaron cambios");
+                    }
                     cargar();
                 }, this::mostrarError);
     }

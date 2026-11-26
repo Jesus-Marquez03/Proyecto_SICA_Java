@@ -122,6 +122,8 @@ public final class SicaApplication extends Application {
         personaView.alConfirmar(dashboardView::mostrarConfirmacion);
         visitasView.alConfirmar(dashboardView::mostrarConfirmacion);
         incidentesView.alConfirmar(dashboardView::mostrarConfirmacion);
+        usuariosView.alConfirmar(dashboardView::mostrarConfirmacion);
+        estadoView.alConfirmar(dashboardView::mostrarConfirmacion);
         registrarNavegacion(usuario, inicioView, inicioController, empresaView, empresaController,
                 personaView, personaController, visitasView, estadoController, incidentesView,
                 incidentesController, reportesView, reportesController, usuariosView,

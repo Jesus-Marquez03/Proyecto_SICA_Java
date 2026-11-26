@@ -10,6 +10,7 @@ import com.proyecto.sica.infrastructure.ui.components.ComboBoxLegible;
 import com.proyecto.sica.infrastructure.ui.components.TablaCopiable;
 import com.proyecto.sica.infrastructure.ui.components.TipoIcono;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -45,6 +46,7 @@ public final class UsuariosView {
     private final Button actualizar = new Button("Guardar cambios");
     private final Button cambiarEstado = new Button("Cambiar estado");
     private final Label estado = new Label();
+    private Consumer<String> onConfirmacion = mensaje -> { };
 
     public UsuariosView() { construir(); }
 
@@ -197,6 +199,8 @@ public final class UsuariosView {
     public void alCrear(Runnable accion) { crear.setOnAction(e -> accion.run()); }
     public void alActualizar(Runnable accion) { actualizar.setOnAction(e -> accion.run()); }
     public void alCambiarEstado(Runnable accion) { cambiarEstado.setOnAction(e -> accion.run()); }
+    public void alConfirmar(Consumer<String> accion) { onConfirmacion = accion; }
+    public void mostrarConfirmacion(String mensaje) { onConfirmacion.accept(mensaje); }
     public void permitir(boolean puedeCrear, boolean puedeActualizar, boolean puedeEstado) {
         crear.setVisible(puedeCrear); crear.setManaged(puedeCrear);
         actualizar.setVisible(puedeActualizar); actualizar.setManaged(puedeActualizar);
